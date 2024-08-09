@@ -113,6 +113,8 @@ export const createNotification = async (req, res) => {
             study: admin.firestore.FieldValue.arrayUnion({
                 userId: userJson.userId,
                 studyId: studyJson.studyId,
+                studyTitle: studyJson.title,
+                studyImage: studyJson.imageUrl,
                 approved: false,
                 startDate: '',
                 expiryDate: ''
@@ -229,24 +231,35 @@ export const readSingleNotification = async (req, res) => {
 
 export const updateNotification = async (req, res) => {
     try {
-        const { notificationId, userId, studyId, approved } = req.body;
+        const { notificationId, approved } = req.body;
 
         // Initialize batch
         const batch = db.batch();
 
         const notificationRef = db.collection(process.env.notificationCollection).doc(notificationId);
 
-        const userRef = db.collection(process.env.userCollection).doc(userId);
+        const notificationDoc = await notificationRef.get();
+
+        if (!notificationDoc.exists) {
+            return res.status(404).send({
+                success: false,
+                message: 'No such notification exists',
+            });
+        }
+
+        const notificationJson = notificationDoc.data();
+
+        const userRef = db.collection(process.env.userCollection).doc(notificationJson?.userId);
 
         var userData = (await userRef.get()).get("study");
 
-        var fieldData = userData.find(item => item.studyId === studyId)
+        var fieldData = userData.find(item => item.studyId === notificationJson.studyId)
 
         var updatedData;
         if (approved) {
             // Find and update the object
             updatedData = userData.map(item => {
-                if (item.studyId === studyId) {
+                if (item.studyId === notificationJson.studyId) {
                     var now = new Date();
 
                     // Set the startDate to the current date
@@ -280,7 +293,7 @@ export const updateNotification = async (req, res) => {
         res.status(201).send({
             success: true,
             message: 'Access Data updated successfully',
-            fieldData: fieldData,
+            studyData: fieldData,
             updatedData: updatedData,
         });
     } catch (error) {
