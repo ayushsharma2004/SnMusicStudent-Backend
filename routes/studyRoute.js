@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { createStudy, deleteStudy, readAllStudy, readKeywordStudy, readSingleStudy, readStudyVideo, readTagsStudy, updateStudy } from '../controllers/studyController.js';
+import { createStudy, deleteStudy, readAllStudy, readIDsStudy, readKeywordStudy, readSingleStudy, readStudyVideo, readTagsStudy, updateStudy } from '../controllers/studyController.js';
 
 // Configure multer for file uploads
 const upload = multer({
@@ -27,6 +27,9 @@ router.post('/read-keyword-study', readKeywordStudy);
 
 //Verify Phone Number || POST
 router.post('/read-tag-study', readTagsStudy);
+
+//Verify Phone Number || POST
+router.post('/read-ids-study', readIDsStudy);
 
 //Verify Phone Number || POST
 router.post('/read-study', readSingleStudy);

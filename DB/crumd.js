@@ -369,6 +369,41 @@ export const searchByIdentity = async (collectionName, identity, limit = 20) => 
   }
 };
 
+export const searchByIDs = async (collectionName, ids = [], limit = 20) => {
+  try {
+    // Fetch documents with a limit
+    const querySnapshot = await db.collection(collectionName).limit(limit).get();
+
+    // Initialize results array
+    let results = [];
+
+    // Iterate through the fetched documents
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      var matchesIds = false;
+
+      // Check if the document matches the criteria Check if the tags array contains all the specified tags
+      ids.forEach((id) => {
+        if (
+          data.studyId === id
+        ) {
+          matchesIds = true;
+        }
+      })
+
+      // Add document to results if it matches either criterion
+      if (matchesIds) {
+        results.push(data);
+      }
+    });
+
+    return results;
+  } catch (error) {
+    console.error("Error fetching documents:", error);
+    throw error; // Re-throw the error after logging it
+  }
+};
+
 export const matchData = async (collectionName, key, value) => {
   const querySnapshot = await db
     .collection(collectionName)
