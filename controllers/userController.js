@@ -29,16 +29,24 @@ const bucket = admin.storage().bucket()
     method = GET
     response: [
     {
-      "userId": "35e5869f-2e88-4880-8ae8-cff13d140ec9",
-      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/user%2F35e5869f-2e88-4880-8ae8-cff13d140ec9%2Fimage%2Fframe.jpg?alt=media&token=fcdcb285-db66-4a30-992e-3c2d80a9641b",
-      "description": "desc5",
-      "title": "title5"
+      "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
+      "name": "Ayush Sharma",
+      "email": "ayush.s.sharma04@gmail.com",
+      "phone": "9326242640",
+      "address": "Mumbai",
+      "study": [],
+      "blocked": false,
+      "role": 1
     },
     {
-      "userId": "44588c1b-125b-44eb-9179-f6c59d9d7344",
-      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/user%2F44588c1b-125b-44eb-9179-f6c59d9d7344%2Fimage%2Fframe.jpg?alt=media&token=ac167b7e-0a3e-49fe-937a-490cd9cefafa",
-      "description": "desc3",
-      "title": "title3"
+      "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
+      "name": "Ayush Sharma",
+      "email": "ayush.s.sharma04@gmail.com",
+      "phone": "9326242640",
+      "address": "Mumbai",
+      "study": [],
+      "blocked": false,
+      "role": 1
     }
   ]
 */
@@ -62,6 +70,37 @@ export const readAllUser = async (req, res) => {
     });
   }
 };
+
+//function to search all users details according to the identity
+/* 
+    request url = http://localhost:8080/api/v1/user/read-identity-user
+    method = POST
+    req.body: {
+      "identity": "userId/name/email/address"
+    }
+    response: [
+    {
+      "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
+      "name": "Ayush Sharma",
+      "email": "ayush.s.sharma04@gmail.com",
+      "phone": "9326242640",
+      "address": "Mumbai",
+      "study": [],
+      "blocked": false,
+      "role": 1
+    },
+    {
+      "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
+      "name": "Ayush Sharma",
+      "email": "ayush.s.sharma04@gmail.com",
+      "phone": "9326242640",
+      "address": "Mumbai",
+      "study": [],
+      "blocked": false,
+      "role": 1
+    }
+  ]
+*/
 
 export const readIdentityUser = async (req, res) => {
   try {

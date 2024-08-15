@@ -1,10 +1,38 @@
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
-import { matchData, readSingleData, updateData } from '../DB/crumd.js';
+import { matchData, readSingleData, updateData, updateMatchData } from '../DB/crumd.js';
 import { db } from '../DB/firestore.js';
 import { comparePassword, hashPassword, sendOtpToEmail, verifyOtp } from '../helper/authHelper.js';
 import JWT from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
+import { response } from 'express';
 
+// Summary: Function used for registering user/student
+// Action: POST
+// url: "http://localhost:8080/api/v1/auth/register-user"
+// req.body: {
+//   "name": "Ayush Sharma", 
+//   "email": "ayush.s.sharma04@gmail.com",
+//   "password": "123456", 
+//   "phone": "9326242640", 
+//   "address": "Mumbai"
+// } 
+// response: {
+//   "success": true,
+//   "message": "User registered successfully",
+//   "user": {
+//     "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
+//     "name": "Ayush Sharma",
+//     "email": "ayush.s.sharma04@gmail.com",
+//     "password": "$2b$10$BiKXnQsN8LKt7s02WScgneR88Cr.mVgNzrUIHGHb9QrbVgqVXXYWa",
+//     "phone": "9326242640",
+//     "address": "Mumbai",
+//     "study": [],
+//     "blocked": false,
+//     "role": 1
+//   },
+//   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImYyYjA3N2VkLWUzNTAtNDc4My04NzM4LTIyYzU5NjkwMzZkZCIsImlhdCI6MTcyMzcwODg0NywiZXhwIjoxNzIzOTY4MDQ3fQ.6Fa_QiWEMYin8HCTDM9YmGixMIeWEEP1iaV2Wfo76kg"
+// }
+// Register User
 export const registerController = async (req, res) => {
   try {
     const { name, email, password, phone, address } = req.body;
@@ -93,7 +121,30 @@ export const registerController = async (req, res) => {
   }
 };
 
-//Login User
+// Summary: Function used for login user/student
+// Action: POST
+// url: "http://localhost:8080/api/v1/auth/login-user"
+// req.body: {
+//   "email": "ayush.s.sharma04@gmail.com",
+//   "password": "123456"
+// } 
+// response: {
+//   "success": true,
+//   "message": "Login successfully",
+//   "user": {
+//     "userId": "27d38b26-f074-481b-bb81-41a404901cc7",
+//     "name": "Ayush Sharma",
+//     "email": "ayush.s.sharma04@gmail.com",
+//     "phone": "9326242640",
+//     "address": "922, Laxman Wadi, Siddharth Nagar ,Korba Mithagad, Wadala East, Mumbai-400037",
+//     "study": [],
+//     "blocked": false,
+//     "role": 1
+//   },
+//   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjI3ZDM4YjI2LWYwNzQtNDgxYi1iYjgxLTQxYTQwNDkwMWNjNyIsImlhdCI6MTcyMzcwODQ1OSwiZXhwIjoxNzIzOTY3NjU5fQ.tOQC3rxIY-OQ2JEyEzbQHDmncoNSrcHYHNQ0L1T5Qp0"
+// }
+
+// Login User
 export const loginController = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -176,6 +227,18 @@ export const loginController = async (req, res) => {
   }
 };
 
+// Summary: Function used for sending otp to email address
+// Action: POST
+// url: "http://localhost:8080/api/v1/auth/send-mail"
+// req.body: {
+//   "email": "ayush.s.sharma04@gmail.com"
+// } 
+// response: {
+//   "success": true,
+//   "message": "OTP sent to email"
+// }
+
+// Send Mail
 export const sendMail = async (req, res) => {
   try {
     const { email } = req.body;
@@ -189,7 +252,6 @@ export const sendMail = async (req, res) => {
       return res.status(200).send({
         success: true,
         message: 'OTP sent to email',
-        sendOtp // Remove this line in production
       });
     }
     return;
@@ -198,6 +260,18 @@ export const sendMail = async (req, res) => {
   }
 }
 
+// Summary: Function used for verifying otp for email address
+// Action: POST
+// url: "http://localhost:8080/api/v1/auth/verify-mail"
+// req.body: {
+//   "email": "ayush.s.sharma04@gmail.com"
+// } 
+// response: {
+//   "success": true,
+//   "message": "OTP verified to email successfully",
+//   "isOtpValid": true
+// }
+// Verify Mail
 export const verifyMail = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -212,6 +286,7 @@ export const verifyMail = async (req, res) => {
 
     // Verify OTP
     const isOtpValid = await verifyOtp(email, otp);
+    
     if (!isOtpValid) {
       return res.status(401).send({
         success: false,
@@ -222,7 +297,7 @@ export const verifyMail = async (req, res) => {
       return res.status(200).send({
         success: true,
         message: 'OTP verified to email successfully',
-        isOtpValid // Remove this line in production
+        isOtpValid 
       });
     }
   } catch (error) {
@@ -230,6 +305,31 @@ export const verifyMail = async (req, res) => {
   }
 }
 
+// Summary: Function used for update password of user
+// Action: POST
+// url: "http://localhost:8080/api/v1/auth/forgot-password"
+// req.body: {
+//   "email": "ayush.s.sharma04@gmail.com",
+//   "newPassword": "654321"
+// }
+// response: {
+//   "success": true,
+//   "message": "Password updated successfully",
+//   "updateData": {
+//     "study": [],
+//     "address": "Mumbai",
+//     "role": 1,
+//     "blocked": false,
+//     "phone": "9326242640",
+//     "name": "Ayush Sharma",
+//     "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
+//     "email": "ayush.s.sharma04@gmail.com",
+//     "otp": "519266",
+//     "expiresAt": 1723710253923,
+//     "password": "$2b$10$SIYw4ZHBRBZmPqUXa899tO4xdVjUlSXFR.0qMk8pPLSzCpm/B5Kxy"
+//   }
+// }
+// Forgot Password
 export const forgotPasswordController = async (req, res) => {
   try {
     const { email, newPassword } = req.body;
@@ -251,12 +351,13 @@ export const forgotPasswordController = async (req, res) => {
     // Hash the new password
     const hashed = await hashPassword(newPassword);
 
-    const update = await updateData(process.env.userCollection, email, { password: hashed });
+    const update = await updateMatchData(process.env.userCollection, 'email', email, { password: hashed });
+    const updateData = update.data();
 
     res.status(200).send({
       success: true,
       message: 'Password updated successfully',
-      update
+      updateData
     });
   } catch (error) {
     console.log(error);
@@ -268,10 +369,25 @@ export const forgotPasswordController = async (req, res) => {
   }
 };
 
-// Update student details excluding image
-export const userUpdateController = async (req, res) => {
+// Summary: Function used for updating user/student, Atleast one field is Required!
+// Action: POST
+// url: "http://localhost:8080/api/v1/auth/update-user"
+// FormData: { 
+//   "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
+//   "name": "Ayush Sharma", 
+//   "email": "ayush.s.sharma04@gmail.com",
+//   "phone": "9326242640", 
+//   "address": "Mumbai"
+// } 
+// req.file: {
+//   file: image file
+// }
+// Update User
+export const updateUserController = async (req, res) => {
   try {
-    const { userId, name, address, phone, email, role } = req.body;
+    const { userId, name, address, phone, email } = req.body;
+    const file = req.file;
+    var photoUrl;
 
     // Create the updates object only with provided fields
     const updates = {};
@@ -284,7 +400,7 @@ export const userUpdateController = async (req, res) => {
       return res.status(400).send({ message: 'Error finding student' });
     }
 
-    if (!name && !address && !contact && !email && !instagram && !facebook && !whatsapp && !role && !file) {
+    if (!name && !address && !phone && !email && !instagram && !facebook && !whatsapp) {
       return res.status(400).send({ message: 'At least one field (name, address, contact, email, social media, role) or image is required' });
     }
 
@@ -293,6 +409,14 @@ export const userUpdateController = async (req, res) => {
     if (!userData) {
       return res.status(404).send({ message: 'Student not found' });
     }
+
+    // if file exists then get its downloaded url
+    if (file) {
+      const imageFile = file;
+      console.log(imageFile);
+      photoUrl = await uploadFile(imageFile, 'images', `user/${userId}/${'photoUrl'}/${imageFile.originalname}`);
+      if (photoUrl) updates.photoUrl = photoUrl;
+  }
 
     // Update student data in Firestore
     await updateData(process.env.userCollection, userId, updates);
@@ -313,80 +437,40 @@ export const userUpdateController = async (req, res) => {
   }
 };
 
-export const changeProfile = async (req, res) => {
-  if (req.file) {
-    const { userId } = req.body
-    const file = req.file
-    console.log(file)
-    if (userId) {
-      const storageRef = ref(storage, `${process.env.storagePath}/user/${userId}/${file.originalname}`);
-
-      const metadata = {
-        contentType: file.mimetype,
-      };
-
-      // Upload the file and metadata
-      const uploadTask = uploadBytesResumable(storageRef, file.buffer, metadata);
-
-      uploadTask.on('state_changed',
-        (snapshot) => {
-          // Observe state change events such as progress, pause, and resume
-          // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log('Upload is ' + progress + '% done');
-          switch (snapshot.state) {
-            case 'paused':
-              console.log('Upload is paused');
-              break;
-            case 'running':
-              console.log('Upload is running');
-              break;
-          }
-        },
-        (error) => {
-          // Handle unsuccessful uploads
-        },
-        async () => {
-          // Handle successful uploads on complete
-          // For instance, get the download URL: https://firebasestorage.googleapis.com/...
-          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref)
-          console.log("new image", downloadUrl)
-          const updates = {
-            photoUrl: downloadUrl
-          }
-          await updateData(process.env.userCollection, userId, updates);
-          res.status(200).send({
-            success: true,
-            photoUrl: downloadUrl,
-            message: "Profile changed successfully"
-          })
-        }
-      );
-    }
-    else {
-      return res.status(401).send("Authorization error")
-    }
-  }
-  else {
-    return res.status(400).send("image is not provided")
-  }
-}
-
+// Summary: Function used for blocking/unblocking user for any action
+// Action: POST
+// url: "http://localhost:8080/api/v1/auth/verify-mail"
+// req.body: {
+//   "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
+//   "block": true/false
+// } 
+// response: {
+//   "success": true,
+//   "message": "User Blocked/Unblocked successfully",
+//   "block": true/false
+// }
+// Block/Unblock User
 export const blockUser = async (req, res) => {
   try {
     const { userId, block } = req.body;
+    var message;
 
     if (!userId) {
       return res.status(400).send({ message: 'Error finding user' });
     }
+    if (block) {
+      message = 'User Blocked successfully'
+    } else {
+      message = 'User Unblocked successfully'
+    }
 
-    var approvedStudies = await updateData(process.env.userCollection, userId, {blocked: block});
+    var blockUser = await updateData(process.env.userCollection, userId, {blocked: block});
     console.log('success');
 
     return res.status(201).send({
       success: true,
-      message: 'user read successfully',
-      study: approvedStudies
+      message: message,
+      block: block
     });
   } catch (error) {
     console.error('Error in reading user:', error);
@@ -397,7 +481,6 @@ export const blockUser = async (req, res) => {
     });
   }
 };
-
 
 export const testController = (req, res) => {
   res.send('Protected Routes');

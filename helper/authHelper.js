@@ -29,7 +29,7 @@ export const sendOtpToEmail = async (email) => {
     // Save OTP in Firestore with an expiration time (e.g., 10 minutes)
     var otpJson = {
       otp: otp,
-      expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
+      expiresAt: Date.now() + 2 * 60 * 1000, // 2 minutes
     }
 
 
@@ -68,14 +68,13 @@ export const verifyOtp = async (email, otp) => {
       return res.status(400).send({ message: 'Valid otp is required' });
     }
 
-    var otpData = await matchData(process.env.userCollection, 'email', email).docs[0].data();
+    var otpRef = await matchData(process.env.userCollection, 'email', email);
+    
+    var otpData = otpRef.docs[0].data()
 
     if (!otpData) {
       throw new Error('OTP not found');
     }
-    console.log(otpData);
-    console.log(otpData.otp);
-    console.log(otp);
 
     if (otpData.otp !== otp) {
       throw new Error('Invalid OTP');

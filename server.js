@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import morgan from "morgan";
 
 import authRoutes from './routes/authRoute.js';
-import accessRoutes from './routes/accessRoute.js';
+// import accessRoutes from './routes/accessRoute.js';
 import studyRoutes from './routes/studyRoute.js';
 import userRoutes from './routes/userRoute.js';
 import notificationRoutes from './routes/notificationRoute.js';
@@ -35,7 +35,7 @@ app.use((req, res, next) => {
 
 //routes
 app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/access', accessRoutes);
+// app.use('/api/v1/access', accessRoutes);
 app.use('/api/v1/study', studyRoutes);
 app.use('/api/v1/user', userRoutes);
 app.use('/api/v1/notification', notificationRoutes);
