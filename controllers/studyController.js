@@ -223,6 +223,7 @@ export const readTagsStudy = async (req, res) => {
   }
 };
 
+// Getting all study items from user doc study field  
 export const readIDsStudy = async (req, res) => {
   try {
     var { ids, limit } = req.body;

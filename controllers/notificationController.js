@@ -22,33 +22,35 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const bucket = admin.storage().bucket()
 
-
-//function to create our Notifications details
-/* 
-    request url = http://localhost:8080/api/v1/notification/create-notification
-    method = POST
-    FormData: 
-    fields: {
-      "title": "title1",
-      "description": "desc1"
-    }
-    files: { //req.file
-      "video": "video file",
-      "image": "image file for thumbnail"
+/*
+    Summery: Used for creating notification request for study and adding it in user doc study field
+    Action: POST
+    url: "http://localhost:8080/api/v1/notification/create-notification"
+    req.body: {
+        "message": "Not decided",
+        "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
+        "studyId": "9f88c762-2857-4266-8b55-78a82972d881"
     }
     response: {
-      "success": true,
-      "message": "Notification created successfully",
-      "notification": {
-        "notificationId": "bb9ee1bc-f704-4aa0-a1cb-fbe255e9c5be",
-        "title": "title9",
-        "description": "desc9",
-        "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/notification%2Fbb9ee1bc-f704-4aa0-a1cb-fbe255e9c5be%2Fwatermark%2FvidInstrument2.mp4?alt=media&token=7f2bdbf5-22d5-4d04-8415-1c56ffe9e4e4",
-        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/notification%2Fbb9ee1bc-f704-4aa0-a1cb-fbe255e9c5be%2Fimage%2Fundefined?alt=media&token=f12e8276-8070-4b82-96d0-fd3334c1abb6",
-        "timestamp": "2024-07-22T16:27:20.343Z"
-      }
+        "success": true,
+        "message": "Notification created successfully",
+        "notification": {
+            "notificationId": "6b4c1980-1774-45c2-aeca-7ecaf12b4140",
+            "message": "New Study Added",
+            "studyId": "553ed00c-36e7-4a7c-bc7a-a021092fb1e2",
+            "studyTitle": "study title1",
+            "studyDescription": "desc1",
+            "studyImage": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F553ed00c-36e7-4a7c-bc7a-a021092fb1e2%2Fimage%2Fundefined?alt=media&token=2a815476-0b56-44f1-9cf1-6807770c9dd4",
+            "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
+            "userName": "Ayush Sharma",
+            "userEmail": "ayush.s.sharma04@gmail.com",
+            "userBlocked": false,
+            "approved": false,
+            "date": "2024-08-15T10:07:53.125Z"
+        }
     }
 */
+// Create Notification
 export const createNotification = async (req, res) => {
     try {
         const { message, userId, studyId } = req.body;
@@ -84,7 +86,7 @@ export const createNotification = async (req, res) => {
         if (!studyDoc.exists) {
             return res.status(404).send({
                 success: false,
-                message: 'No such user exists',
+                message: 'No such study exists',
             });
         }
 
@@ -156,20 +158,26 @@ export const createNotification = async (req, res) => {
 /* 
     request url = http://localhost:8080/api/v1/notification/read-all-notification
     method = GET
-    response: [
-    {
-      "notificationId": "35e5869f-2e88-4880-8ae8-cff13d140ec9",
-      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/notification%2F35e5869f-2e88-4880-8ae8-cff13d140ec9%2Fimage%2Fframe.jpg?alt=media&token=fcdcb285-db66-4a30-992e-3c2d80a9641b",
-      "description": "desc5",
-      "title": "title5"
-    },
-    {
-      "notificationId": "44588c1b-125b-44eb-9179-f6c59d9d7344",
-      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/notification%2F44588c1b-125b-44eb-9179-f6c59d9d7344%2Fimage%2Fframe.jpg?alt=media&token=ac167b7e-0a3e-49fe-937a-490cd9cefafa",
-      "description": "desc3",
-      "title": "title3"
+    response: {
+        "success": true,
+        "message": "notification read successfully",
+        "notification": [
+            {
+            "date": "2024-08-15T10:07:53.125Z",
+            "approved": false,
+            "studyDescription": "desc1",
+            "studyImage": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F553ed00c-36e7-4a7c-bc7a-a021092fb1e2%2Fimage%2Fundefined?alt=media&token=2a815476-0b56-44f1-9cf1-6807770c9dd4",
+            "notificationId": "6b4c1980-1774-45c2-aeca-7ecaf12b4140",
+            "studyId": "553ed00c-36e7-4a7c-bc7a-a021092fb1e2",
+            "userEmail": "ayush.s.sharma04@gmail.com",
+            "studyTitle": "study title1",
+            "userBlocked": false,
+            "message": "New Study Added",
+            "userName": "Ayush Sharma",
+            "userId": "f2b077ed-e350-4783-8738-22c5969036dd"
+            }
+        ]
     }
-  ]
 */
 
 export const readAllNotification = async (req, res) => {
@@ -199,17 +207,24 @@ export const readAllNotification = async (req, res) => {
     {
       "notificationId": "jjhjhjsagsa" //your doc id
     }
-      response: {
+    response: {
         "success": true,
-        "message": "Notification read successfully",
+        "message": "notification read successfully",
         "notification": {
-          "notificationId": "0cfc8500-8ebd-44ac-b2f8-f46e712e24ed",
-          "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/notification%2Fviddemo1.mp4?alt=media&token=c1a87355-2d6e-49f5-b87c-8d67eaf0784b",
-          "description": "gjygkjhjk",
-          "title": "title2",
-          "imageUrl": "hgjhghj.com"
+            "date": "2024-08-15T10:07:53.125Z",
+            "approved": false,
+            "studyDescription": "desc1",
+            "studyImage": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F553ed00c-36e7-4a7c-bc7a-a021092fb1e2%2Fimage%2Fundefined?alt=media&token=2a815476-0b56-44f1-9cf1-6807770c9dd4",
+            "notificationId": "6b4c1980-1774-45c2-aeca-7ecaf12b4140",
+            "studyId": "553ed00c-36e7-4a7c-bc7a-a021092fb1e2",
+            "userEmail": "ayush.s.sharma04@gmail.com",
+            "studyTitle": "study title1",
+            "userBlocked": false,
+            "message": "New Study Added",
+            "userName": "Ayush Sharma",
+            "userId": "f2b077ed-e350-4783-8738-22c5969036dd"
         }
-      }
+    }
 */
 export const readSingleNotification = async (req, res) => {
     try {
@@ -237,6 +252,15 @@ export const readSingleNotification = async (req, res) => {
     }
 };
 
+//function to update our Notifications details
+/* 
+    request url = http://localhost:8080/api/v1/notification/update-notification
+    method = POST
+    req.body: {
+        "notificationId": "jjhjhjsagsa" //your notification doc id,
+        "approved": true/false 
+    }
+*/
 export const updateNotification = async (req, res) => {
     try {
         const { notificationId, approved } = req.body;

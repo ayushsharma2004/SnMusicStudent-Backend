@@ -6,6 +6,7 @@ import {
   verifyMail,
   forgotPasswordController,
   blockUser,
+  updateUserController,
 } from '../controllers/authController.js';
 import { isStudent, requireSignIn } from '../middleware/authMiddleware.js';
 import multer, { memoryStorage } from 'multer';
@@ -31,6 +32,9 @@ router.post("/verify-mail", verifyMail)
 
 //Update old password with new new password || POST
 router.post("/forgot-password", forgotPasswordController)
+
+//Update User || POST
+router.post("/update-user", updateUserController)
 
 //Login User || POST
 router.post('/block-user', blockUser);
