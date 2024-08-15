@@ -8,7 +8,7 @@ import slugify from "slugify";
 import { v4 as uuidv4 } from 'uuid';
 import { uploadVideo } from "../DB/storage.js";
 import cache from "memory-cache"
-import { createData, deleteData, matchData, readAllData, readAllLimitData, readFieldData, readSingleData, searchByKeyword, searchByTag, updateData } from "../DB/crumd.js";
+import { createData, deleteData, matchData, readAllData, readAllLimitData, readFieldData, readSingleData, searchByIDs, searchByKeyword, searchByTag, updateData } from "../DB/crumd.js";
 import { storage } from "../DB/firebase.js";
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { addTextWatermarkToImage, addTextWatermarkToVideo, extractFrameFromVideo, uploadFile, uploadWaterMarkFile } from "../helper/mediaHelper.js";
@@ -206,6 +206,37 @@ export const readTagsStudy = async (req, res) => {
     }
 
     var studyData = await searchByTag(process.env.studyCollection, keyword, tag);
+    console.log('success');
+
+    return res.status(201).send({
+      success: true,
+      message: 'study read successfully',
+      study: studyData
+    });
+  } catch (error) {
+    console.error('Error in reading study:', error);
+    return res.status(500).send({
+      success: false,
+      message: 'Error in reading study',
+      error: error.message,
+    });
+  }
+};
+
+export const readIDsStudy = async (req, res) => {
+  try {
+    var { ids, limit } = req.body;
+    var lim = 20
+
+    if (limit) {
+      lim = limit
+    }
+
+    if (!ids) {
+      return res.status(400).send({ message: 'Error finding study' });
+    }
+
+    var studyData = await searchByIDs(process.env.studyCollection, ids, lim);
     console.log('success');
 
     return res.status(201).send({

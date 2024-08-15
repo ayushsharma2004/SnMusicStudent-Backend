@@ -91,11 +91,18 @@ export const createNotification = async (req, res) => {
         var userJson = userDoc.data();
         var studyJson = studyDoc.data();
 
+        const validateStudies = userJson?.study?.filter(study => study?.studyId === studyId);
+
+        if (validateStudies.length >= 1) {
+            return res.status(400).send({ message: 'Request already exists' });
+        }
+
         const notificationJson = {
             notificationId: notificationId,
             message: message,
             studyId: studyJson.studyId,
             studyTitle: studyJson.title,
+            studyDescription: studyJson.description,
             studyImage: studyJson.imageUrl,
             userId: userJson.userId,
             userName: userJson.name,
@@ -114,6 +121,7 @@ export const createNotification = async (req, res) => {
                 userId: userJson.userId,
                 studyId: studyJson.studyId,
                 studyTitle: studyJson.title,
+                studyDescription: studyJson.description,
                 studyImage: studyJson.imageUrl,
                 approved: false,
                 startDate: '',
