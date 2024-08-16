@@ -91,13 +91,14 @@ export const createNotification = async (req, res) => {
         }
 
         var userJson = userDoc.data();
-        var studyJson = studyDoc.data();
 
+        // Request Validation if the user already has the access of the video
         const validateStudies = userJson?.study?.filter(study => study?.studyId === studyId);
-
         if (validateStudies.length >= 1) {
             return res.status(400).send({ message: 'Request already exists' });
         }
+
+        var studyJson = studyDoc.data();
 
         const notificationJson = {
             notificationId: notificationId,
@@ -259,6 +260,42 @@ export const readSingleNotification = async (req, res) => {
     req.body: {
         "notificationId": "jjhjhjsagsa" //your notification doc id,
         "approved": true/false 
+    }
+    response: {
+        "success": true,
+        "message": "Access Data updated successfully",
+        "studyData": {
+            "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
+            "studyId": "33e93fad-d0e0-4a89-89ae-8f80cac2dd6c",
+            "studyTitle": "study title2",
+            "studyDescription": "desc2",
+            "studyImage": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fimage%2Fundefined?alt=media&token=873086c0-f8d5-4609-ae9a-59677cb6243c",
+            "approved": false,
+            "startDate": "",
+            "expiryDate": ""
+        },
+        "updatedData": [
+            {
+                "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
+                "studyId": "553ed00c-36e7-4a7c-bc7a-a021092fb1e2",
+                "studyTitle": "study title1",
+                "studyDescription": "desc1",
+                "studyImage": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F553ed00c-36e7-4a7c-bc7a-a021092fb1e2%2Fimage%2Fundefined?alt=media&token=2a815476-0b56-44f1-9cf1-6807770c9dd4",
+                "approved": false,
+                "startDate": "",
+                "expiryDate": ""
+            },
+            {
+                "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
+                "studyId": "33e93fad-d0e0-4a89-89ae-8f80cac2dd6c",
+                "studyTitle": "study title2",
+                "studyDescription": "desc2",
+                "studyImage": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fimage%2Fundefined?alt=media&token=873086c0-f8d5-4609-ae9a-59677cb6243c",
+                "approved": true,
+                "startDate": "2024-08-15T15:45:42.743Z",
+                "expiryDate": "2024-11-15T15:45:42.743Z"
+            }
+        ]
     }
 */
 export const updateNotification = async (req, res) => {

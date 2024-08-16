@@ -173,6 +173,51 @@ export const readSingleUser = async (req, res) => {
   }
 };
 
+/*
+  Summary: Function to read approved study materials wich the user has access of
+  Action: POST
+  url: "http://localhost:8080/api/v1/user/read-user-study"
+  req.body: {
+    "userId": "f2b077ed-e350-4783-8738-22c5969036dd"
+  }
+  response: {
+    "success": true,
+    "message": "study read successfully",
+    "study": [
+      {
+        "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fwatermark%2FvidInstrument6.mp4?alt=media&token=fb501109-032b-4051-becf-92dd48167bbd",
+        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fimage%2Fundefined?alt=media&token=873086c0-f8d5-4609-ae9a-59677cb6243c",
+        "description": "desc2",
+        "studyId": "33e93fad-d0e0-4a89-89ae-8f80cac2dd6c",
+        "tags": [
+          "rag",
+          "songs"
+        ],
+        "timestamp": {
+          "_seconds": 1722241643,
+          "_nanoseconds": 921000000
+        },
+        "title": "study title2"
+      },      
+      {
+        "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fwatermark%2FvidInstrument6.mp4?alt=media&token=fb501109-032b-4051-becf-92dd48167bbd",
+        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fimage%2Fundefined?alt=media&token=873086c0-f8d5-4609-ae9a-59677cb6243c",
+        "description": "desc2",
+        "studyId": "193fad-d0e0-4a89-89ae-8f80cac2dd6c",
+        "tags": [
+          "rag",
+          "songs"
+        ],
+        "timestamp": {
+          "_seconds": 1722241643,
+          "_nanoseconds": 921000000
+        },  
+        "title": "study title1"
+      }
+    ]
+  }
+*/
+// Reads approved study material wich the user has access of
 export const readUserStudy = async (req, res) => {
   try {
     const { userId } = req.body;
@@ -199,6 +244,53 @@ export const readUserStudy = async (req, res) => {
   }
 };
 
+
+/*
+  Summary: Function to read limited approved study materials wich the user has access of
+  Action: POST
+  url: "http://localhost:8080/api/v1/user/read-user-study"
+  req.body: {
+    "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
+    "limit": 3
+  }
+  response: {
+    "success": true,
+    "message": "study read successfully",
+    "study": [
+      {
+        "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fwatermark%2FvidInstrument6.mp4?alt=media&token=fb501109-032b-4051-becf-92dd48167bbd",
+        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fimage%2Fundefined?alt=media&token=873086c0-f8d5-4609-ae9a-59677cb6243c",
+        "description": "desc2",
+        "studyId": "33e93fad-d0e0-4a89-89ae-8f80cac2dd6c",
+        "tags": [
+          "rag",
+          "songs"
+        ],
+        "timestamp": {
+          "_seconds": 1722241643,
+          "_nanoseconds": 921000000
+        },
+        "title": "study title2"
+      },      
+      {
+        "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fwatermark%2FvidInstrument6.mp4?alt=media&token=fb501109-032b-4051-becf-92dd48167bbd",
+        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fimage%2Fundefined?alt=media&token=873086c0-f8d5-4609-ae9a-59677cb6243c",
+        "description": "desc2",
+        "studyId": "193fad-d0e0-4a89-89ae-8f80cac2dd6c",
+        "tags": [
+          "rag",
+          "songs"
+        ],
+        "timestamp": {
+          "_seconds": 1722241643,
+          "_nanoseconds": 921000000
+        },  
+        "title": "study title1"
+      }
+    ]
+  }
+*/
+// Reads limited approved study material wich the user has access of
 export const readLimitedUserStudy = async (req, res) => {
   try {
     const { userId, limit } = req.body;
@@ -225,6 +317,51 @@ export const readLimitedUserStudy = async (req, res) => {
   }
 };
 
+/*
+  Summary: Function to read unapproved study materials wich the user has access of
+  Action: POST
+  url: "http://localhost:8080/api/v1/user/read-user-study"
+  req.body: {
+    "userId": "f2b077ed-e350-4783-8738-22c5969036dd"
+  }
+  response: {
+    "success": true,
+    "message": "study read successfully",
+    "study": [
+      {
+        "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fwatermark%2FvidInstrument6.mp4?alt=media&token=fb501109-032b-4051-becf-92dd48167bbd",
+        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fimage%2Fundefined?alt=media&token=873086c0-f8d5-4609-ae9a-59677cb6243c",
+        "description": "desc2",
+        "studyId": "33e93fad-d0e0-4a89-89ae-8f80cac2dd6c",
+        "tags": [
+          "rag",
+          "songs"
+        ],
+        "timestamp": {
+          "_seconds": 1722241643,
+          "_nanoseconds": 921000000
+        },
+        "title": "study title2"
+      },      
+      {
+        "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fwatermark%2FvidInstrument6.mp4?alt=media&token=fb501109-032b-4051-becf-92dd48167bbd",
+        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fimage%2Fundefined?alt=media&token=873086c0-f8d5-4609-ae9a-59677cb6243c",
+        "description": "desc2",
+        "studyId": "193fad-d0e0-4a89-89ae-8f80cac2dd6c",
+        "tags": [
+          "rag",
+          "songs"
+        ],
+        "timestamp": {
+          "_seconds": 1722241643,
+          "_nanoseconds": 921000000
+        },  
+        "title": "study title1"
+      }
+    ]
+  }
+*/
+// Reads unapproved study material wich the user has access of
 export const readUserUnapprovedStudy = async (req, res) => {
   try {
     const { userId } = req.body;
@@ -251,6 +388,35 @@ export const readUserUnapprovedStudy = async (req, res) => {
   }
 };
 
+/*
+  Summary: Function to read unapproved study materials wich the user has access of
+  Action: POST
+  url: "http://localhost:8080/api/v1/user/read-user-study"
+  req.body: {
+    "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
+    "studyId": "077ed4783-8738-22c5-e350-4783-969"
+  }
+  response: {
+    "success": true,
+    "message": "study read successfully",
+    "study": {
+      "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fwatermark%2FvidInstrument6.mp4?alt=media&token=fb501109-032b-4051-becf-92dd48167bbd",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fimage%2Fundefined?alt=media&token=873086c0-f8d5-4609-ae9a-59677cb6243c",
+      "description": "desc2",
+      "studyId": "33e93fad-d0e0-4a89-89ae-8f80cac2dd6c",
+      "tags": [
+        "rag",
+        "songs"
+      ],
+      "timestamp": {
+        "_seconds": 1722241643,
+        "_nanoseconds": 921000000
+      },
+      "title": "study title2"
+    }
+  }
+*/
+// Reads unapproved study material wich the user has access of
 export const readSingleUserStudy = async (req, res) => {
   try {
     const { userId, studyId } = req.body;

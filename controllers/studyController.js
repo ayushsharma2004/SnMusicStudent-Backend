@@ -126,12 +126,14 @@ export const createStudy = async (req, res) => {
     response: [
     {
       "studyId": "35e5869f-2e88-4880-8ae8-cff13d140ec9",
+      "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33b84a50-8c40-407a-b259-eed837c6b2af%2Fwatermark%2FvidInstrument8.mp4?alt=media&token=62ab1750-63f1-4662-944a-7e5c40366e09",
       "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F35e5869f-2e88-4880-8ae8-cff13d140ec9%2Fimage%2Fframe.jpg?alt=media&token=fcdcb285-db66-4a30-992e-3c2d80a9641b",
       "description": "desc5",
       "title": "title5"
     },
     {
       "studyId": "44588c1b-125b-44eb-9179-f6c59d9d7344",
+      "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33b84a50-8c40-407a-b259-eed837c6b2af%2Fwatermark%2FvidInstrument8.mp4?alt=media&token=62ab1750-63f1-4662-944a-7e5c40366e09",
       "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F44588c1b-125b-44eb-9179-f6c59d9d7344%2Fimage%2Fframe.jpg?alt=media&token=ac167b7e-0a3e-49fe-937a-490cd9cefafa",
       "description": "desc3",
       "title": "title3"
@@ -143,7 +145,7 @@ export const readAllStudy = async (req, res) => {
   try {
     var key = 'all_study'
     // var study = await readAllData(process.env.studyCollection);
-    var study = await readAllLimitData(process.env.studyCollection, ['studyId', 'imageUrl', 'description', 'title']);
+    var study = await readAllLimitData(process.env.studyCollection, ['studyId', 'imageUrl', 'description', 'title', 'videoUrl']);
 
     console.log("setting data in cache")
     var response = {
@@ -168,6 +170,36 @@ export const readAllStudy = async (req, res) => {
   }
 };
 
+/*
+  Summary: Funcyion to search study materials by a keyword
+  Action: POST
+  url: "http://localhost:8080/api/v1/study/read-study-keyword"
+  req.body: {
+    "keyword": "tracks"
+  }
+  response: {
+    "success": true,
+    "message": "study read successfully",
+    "study": [
+      {
+        "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fwatermark%2FvidInstrument6.mp4?alt=media&token=fb501109-032b-4051-becf-92dd48167bbd",
+        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fimage%2Fundefined?alt=media&token=873086c0-f8d5-4609-ae9a-59677cb6243c",
+        "description": "desc2",
+        "studyId": "33e93fad-d0e0-4a89-89ae-8f80cac2dd6c",
+        "tags": [
+          "rag",
+          "songs"
+        ],
+        "timestamp": {
+          "_seconds": 1722241643,
+          "_nanoseconds": 921000000
+        },
+        "title": "study title2"
+      }
+    ]
+  }
+*/
+// search study material by keyword
 export const readKeywordStudy = async (req, res) => {
   try {
     const { keyword } = req.body;
@@ -194,6 +226,52 @@ export const readKeywordStudy = async (req, res) => {
   }
 };
 
+/*
+  Summary: Funcyion to search study materials by a tags and keyword (optional)
+  Action: POST
+  url: "http://localhost:8080/api/v1/study/read-tag-study"
+  req.body: {
+    "keyword": "songs", (optional)
+    "tag": ["songs", "spiritual"]
+  }
+  response: {
+    "success": true,
+    "message": "study read successfully",
+    "study": [
+      {
+        "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fwatermark%2FvidInstrument6.mp4?alt=media&token=fb501109-032b-4051-becf-92dd48167bbd",
+        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fimage%2Fundefined?alt=media&token=873086c0-f8d5-4609-ae9a-59677cb6243c",
+        "description": "desc2",
+        "studyId": "33e93fad-d0e0-4a89-89ae-8f80cac2dd6c",
+        "tags": [
+          "rag",
+          "songs"
+        ],
+        "timestamp": {
+          "_seconds": 1722241643,
+          "_nanoseconds": 921000000
+        },
+        "title": "study title2"
+      },
+      {
+        "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2Fc2090832-69d6-4d18-ac09-8375149966da%2Fwatermark%2FvidInstrument7.mp4?alt=media&token=6420eeed-8789-49a0-abe1-a44a717514b0",
+        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2Fc2090832-69d6-4d18-ac09-8375149966da%2Fimage%2Fundefined?alt=media&token=0d028104-4b2f-498d-9d7f-23404d3bc6c3",
+        "description": "desc3",
+        "studyId": "c2090832-69d6-4d18-ac09-8375149966da",
+        "tags": [
+          "spiritual",
+          "tracks"
+        ],
+        "timestamp": {
+          "_seconds": 1722241717,
+          "_nanoseconds": 667000000
+        },
+        "title": "study title3"
+      }
+    ]
+  }
+*/
+//
 export const readTagsStudy = async (req, res) => {
   try {
     var { keyword, tag } = req.body;
@@ -223,6 +301,50 @@ export const readTagsStudy = async (req, res) => {
   }
 };
 
+/*
+  Summary: Funcyion to search study materials by a keyword
+  Action: POST
+  url: "http://localhost:8080/api/v1/study/read-tag-study"
+  req.body: {
+    "ids": ["c2090832-69d6-4d18-ac09-8375149966da", "553ed00c-36e7-4a7c-bc7a-a021092fb1e2"]
+  }
+  response: {
+  "success": true,
+  "message": "study read successfully",
+  "study": [
+    {
+      "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F553ed00c-36e7-4a7c-bc7a-a021092fb1e2%2Fwatermark%2FvidInstrument5.mp4?alt=media&token=2ce4ba8e-74fa-4552-99db-46aa14db7d47",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F553ed00c-36e7-4a7c-bc7a-a021092fb1e2%2Fimage%2Fundefined?alt=media&token=2a815476-0b56-44f1-9cf1-6807770c9dd4",
+      "description": "desc1",
+      "studyId": "553ed00c-36e7-4a7c-bc7a-a021092fb1e2",
+      "tags": [
+        "rag",
+        "tracks"
+      ],
+      "timestamp": {
+        "_seconds": 1722241543,
+        "_nanoseconds": 342000000
+      },
+      "title": "study title1"
+    },
+    {
+      "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2Fc2090832-69d6-4d18-ac09-8375149966da%2Fwatermark%2FvidInstrument7.mp4?alt=media&token=6420eeed-8789-49a0-abe1-a44a717514b0",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2Fc2090832-69d6-4d18-ac09-8375149966da%2Fimage%2Fundefined?alt=media&token=0d028104-4b2f-498d-9d7f-23404d3bc6c3",
+      "description": "desc3",
+      "studyId": "c2090832-69d6-4d18-ac09-8375149966da",
+      "tags": [
+        "spiritual",
+        "tracks"
+      ],
+      "timestamp": {
+        "_seconds": 1722241717,
+        "_nanoseconds": 667000000
+      },
+      "title": "study title3"
+    }
+  ]
+}
+*/
 // Getting all study items from user doc study field  
 export const readIDsStudy = async (req, res) => {
   try {

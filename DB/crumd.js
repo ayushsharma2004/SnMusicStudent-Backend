@@ -294,7 +294,8 @@ export const searchByKeyword = async (collectionName, keyword, limit = 20) => {
       // Perform keyword filtering on desired fields
       if (
         data.title && data.title.includes(keyword) ||
-        data.description && data.description?.includes(keyword)
+        data.description && data.description?.includes(keyword) ||
+        data.tags && data.tags?.includes(keyword)
       ) {
         results.push(data);
       }
