@@ -8,7 +8,7 @@ import slugify from "slugify";
 import { v4 as uuidv4 } from 'uuid';
 import { uploadVideo } from "../DB/storage.js";
 import cache from "memory-cache"
-import { readAllLimitData, readSingleData, searchByIdentity, searchInnerFieldData, searchLimitInnerFieldData } from "../DB/crumd.js";
+import { readAllLimitData, readFieldData, readSingleData, searchByIdentity, searchInnerFieldData, searchLimitInnerFieldData } from "../DB/crumd.js";
 import { storage } from "../DB/firebase.js";
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { addTextWatermarkToImage, addTextWatermarkToVideo, extractFrameFromVideo, uploadFile, uploadWaterMarkFile } from "../helper/mediaHelper.js";
@@ -168,6 +168,78 @@ export const readSingleUser = async (req, res) => {
     return res.status(500).send({
       success: false,
       message: 'Error in reading user',
+      error: error.message,
+    });
+  }
+};
+
+
+/*
+  Summary: Function to read approved study materials wich the user has access of
+  Action: POST
+  url: "http://localhost:8080/api/v1/user/read-user-study"
+  req.body: {
+    "userId": "f2b077ed-e350-4783-8738-22c5969036dd"
+  }
+  response: {
+    "success": true,
+    "message": "study read successfully",
+    "study": [
+      {
+        "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fwatermark%2FvidInstrument6.mp4?alt=media&token=fb501109-032b-4051-becf-92dd48167bbd",
+        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fimage%2Fundefined?alt=media&token=873086c0-f8d5-4609-ae9a-59677cb6243c",
+        "description": "desc2",
+        "studyId": "33e93fad-d0e0-4a89-89ae-8f80cac2dd6c",
+        "tags": [
+          "rag",
+          "songs"
+        ],
+        "timestamp": {
+          "_seconds": 1722241643,
+          "_nanoseconds": 921000000
+        },
+        "title": "study title2"
+      },      
+      {
+        "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fwatermark%2FvidInstrument6.mp4?alt=media&token=fb501109-032b-4051-becf-92dd48167bbd",
+        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fimage%2Fundefined?alt=media&token=873086c0-f8d5-4609-ae9a-59677cb6243c",
+        "description": "desc2",
+        "studyId": "193fad-d0e0-4a89-89ae-8f80cac2dd6c",
+        "tags": [
+          "rag",
+          "songs"
+        ],
+        "timestamp": {
+          "_seconds": 1722241643,
+          "_nanoseconds": 921000000
+        },  
+        "title": "study title1"
+      }
+    ]
+  }
+*/
+// Reads all alerts wich the user has 
+export const readAllUserAlert = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).send({ message: 'Error finding user' });
+    }
+
+    var alerts = await readFieldData(process.env.userCollection, userId, 'alert', 'time');
+    console.log('success');
+
+    return res.status(201).send({
+      success: true,
+      message: 'user read successfully',
+      alerts: alerts
+    });
+  } catch (error) {
+    console.error('Error in reading alerts:', error);
+    return res.status(500).send({
+      success: false,
+      message: 'Error in reading alerts',
       error: error.message,
     });
   }

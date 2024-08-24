@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { readAllUser, readIdentityUser, readLimitedUserStudy, readSingleUser, readSingleUserStudy, readUserStudy, readUserUnapprovedStudy } from '../controllers/userController.js';
+import { readAllUser, readAllUserAlert, readIdentityUser, readLimitedUserStudy, readSingleUser, readSingleUserStudy, readUserStudy, readUserUnapprovedStudy } from '../controllers/userController.js';
 
 // Configure multer for file uploads
 const upload = multer({
@@ -27,6 +27,9 @@ router.post('/read-user', readSingleUser);
 
 //Verify Phone Number || POST
 router.post('/read-user-study', readUserStudy);
+
+//Verify Phone Number || POST
+router.post('/read-user-alert', readAllUserAlert);
 
 //Verify Phone Number || POST
 router.post('/read-limit-user-study', readLimitedUserStudy);

@@ -1,6 +1,6 @@
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { matchData, readSingleData, updateData, updateMatchData } from '../DB/crumd.js';
-import { db } from '../DB/firestore.js';
+import { admin, db } from '../DB/firestore.js';
 import { comparePassword, hashPassword, sendOtpToEmail, verifyOtp } from '../helper/authHelper.js';
 import JWT from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
@@ -37,6 +37,8 @@ export const registerController = async (req, res) => {
   try {
     const { name, email, password, phone, address } = req.body;
     const userId = uuidv4();
+    var now = new Date();
+    var time = now.toISOString();
 
     // Validate email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -91,6 +93,12 @@ export const registerController = async (req, res) => {
       study: [],
       blocked: false,
       role: 1,
+      alert: admin.firestore.FieldValue.arrayUnion({
+        type: 1,
+        heading: 'Welcome to SNMUSIC',
+        text: `You have been successfully registered`,
+        time: time
+      })
     };
 
     //token

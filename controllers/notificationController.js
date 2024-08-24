@@ -61,6 +61,8 @@ export const createNotification = async (req, res) => {
 
         var now = new Date();
 
+        var time = now.toISOString()
+
         if (!message || !userId || !studyId) {
             return res.status(400).send({ message: 'Message, user info and study material info are required' });
         }
@@ -127,8 +129,15 @@ export const createNotification = async (req, res) => {
                 studyDescription: studyJson.description,
                 studyImage: studyJson.imageUrl,
                 approved: false,
+                denied: false,
                 startDate: '',
                 expiryDate: ''
+            }),
+            alert: admin.firestore.FieldValue.arrayUnion({
+                type: 1,
+                heading: "Request Send",
+                text: `You have requested access for ${studyJson.title}`,
+                time: time
             })
         });
 
@@ -301,6 +310,7 @@ export const readSingleNotification = async (req, res) => {
 export const updateNotification = async (req, res) => {
     try {
         const { notificationId, approved } = req.body;
+        var type;
 
         // Initialize batch
         const batch = db.batch();
@@ -325,18 +335,19 @@ export const updateNotification = async (req, res) => {
         var fieldData = userData.find(item => item.studyId === notificationJson.studyId)
 
         var updatedData;
+        var now = new Date();
+
+        // Set the startDate to the current date
+        const startDate = now.toISOString(); // Converts to ISO string format
+
+        // Calculate the date 100 days from now
+        now.setMonth(now.getMonth() + 3);
+        const expiryDate = now.toISOString();
         if (approved) {
+            type = 2;
             // Find and update the object
             updatedData = userData.map(item => {
                 if (item.studyId === notificationJson.studyId) {
-                    var now = new Date();
-
-                    // Set the startDate to the current date
-                    const startDate = now.toISOString(); // Converts to ISO string format
-
-                    // Calculate the date 100 days from now
-                    now.setMonth(now.getMonth() + 3);
-                    const expiryDate = now.toISOString();
                     return {
                         ...item,
                         approved: approved,
@@ -349,8 +360,37 @@ export const updateNotification = async (req, res) => {
             console.log(updatedData);
             // Update user document's events field
             batch.update(userRef, {
-                study: updatedData
+                study: updatedData,
+                alert: admin.firestore.FieldValue.arrayUnion({
+                    type: type,
+                    heading: "Access Accepted",
+                    text: `You have been given access for ${notificationJson.studyTitle}`,
+                    time: startDate
+                })
             });
+        } else {
+            type = 0;
+
+            // Find and update the object
+            updatedData = userData.map(item => {
+                if (item.studyId === notificationJson.studyId) {
+                    return {
+                        ...item,
+                        denied: true
+                    };
+                }
+                return item;
+            });
+
+            batch.update(userRef, {
+                study: updatedData,
+                alert: admin.firestore.FieldValue.arrayUnion({
+                    type: type,
+                    heading: "Access Denied",
+                    text: `Your request has been denied for ${notificationJson.studyTitle}`,
+                    time: startDate
+                })
+            })
         }
 
         batch.delete(notificationRef);
