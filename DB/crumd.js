@@ -193,12 +193,19 @@ export const readSingleSubData = async (firstCollectionName, secondCollectionNam
   }
 };
 
-export const readFieldData = async (collectionName, id, fieldName) => {
+export const readFieldData = async (collectionName, id, fieldName, sort=false) => {
   try {
     const docRef = await db.collection(collectionName).doc(id).get();
 
     if (docRef.exists) {
-      const fieldValue = docRef.get(fieldName);
+      var fieldValue = docRef.get(fieldName);
+
+      if (sort && Array.isArray(fieldValue)) {
+        console.log(sort);
+        fieldValue = fieldValue.sort((a, b) => new Date(b[sort]) - new Date(a[sort]));
+        console.log(fieldValue);
+      }
+
       return fieldValue;
     } else {
       console.log("Document does not exist");
