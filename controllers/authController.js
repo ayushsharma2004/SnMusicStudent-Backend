@@ -222,15 +222,26 @@ export const loginController = async (req, res) => {
 
     //token
     const token = await JWT.sign(
-      { id: userData.userId },
+      {
+        user: {
+          userId: userData.userId,
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone,
+          address: userData.address,
+          study: userData.study,
+          blocked: userData.blocked,
+          role: userData.role
+        }
+      },
       process.env.JWT_token,
       {
-        expiresIn: '3d',
+        expiresIn: '7d',
       }
     );
-    res.status(200).send({
+    console.log(token)
+    res.cookie("accessToken", token, { expire: Date.now() + 24 * 60 * 60 * 1000, httpOnly: true, sameSite: "none", secure: false }).send({
       success: true,
-      message: 'Login successfully',
       user: {
         userId: userData.userId,
         name: userData.name,
@@ -239,10 +250,10 @@ export const loginController = async (req, res) => {
         address: userData.address,
         study: userData.study,
         blocked: userData.blocked,
-        role: userData.role,
-      },
-      token,
+        role: userData.role
+      }
     });
+
     console.log('success');
   } catch (error) {
     console.log(error);

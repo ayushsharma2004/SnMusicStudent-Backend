@@ -8,6 +8,7 @@ import authRoutes from './routes/authRoute.js';
 import studyRoutes from './routes/studyRoute.js';
 import userRoutes from './routes/userRoute.js';
 import notificationRoutes from './routes/notificationRoute.js';
+import cookieParser from 'cookie-parser';
 
 import cors from 'cors';
 import bodyParser from 'body-parser';
@@ -19,7 +20,12 @@ dotenv.config();
 const app = express();
 
 //middlewares
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:5174", // Frontend domain
+  credentials: true,
+}
+));
+app.use(cookieParser())
 app.use(cors({ origin: '*' })); // Allow all origins for testing
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.json());

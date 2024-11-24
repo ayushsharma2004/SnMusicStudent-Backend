@@ -27,6 +27,7 @@
     "canvas": "^2.11.2",
     "colors": "^1.4.0",
     "concurrently": "^8.2.1",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "creatomate": "^1.2.0",
     "crypto": "^1.0.1",
