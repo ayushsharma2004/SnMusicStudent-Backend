@@ -68,9 +68,11 @@ export const createNotification = async (req, res) => {
         }
 
         const validateData = await matchTwoData(process.env.notificationCollection, 'userId', userId, 'studyId', studyId);
-        if (!validateData.empty) {
+        if (!validateData?.empty) {
             return res.status(400).send({ message: 'Request already exists' });
         }
+        console.log('valid1');
+
 
         const userRef = db.collection(process.env.userCollection).doc(userId);
         const userDoc = await userRef.get();
@@ -92,56 +94,100 @@ export const createNotification = async (req, res) => {
             });
         }
 
-        var userJson = userDoc.data();
+        var userJson = userDoc?.data();
 
         // Request Validation if the user already has the access of the video
         const validateStudies = userJson?.study?.filter(study => study?.studyId === studyId);
         if (validateStudies.length >= 1) {
-            return res.status(400).send({ message: 'Request already exists' });
+            return res.status(400).send({ message: 'User already has access to the study' });
         }
 
         var studyJson = studyDoc.data();
+        var notificationJson
 
-        const notificationJson = {
-            notificationId: notificationId,
-            message: message,
-            studyId: studyJson.studyId,
-            studyTitle: studyJson.title,
-            studyDescription: studyJson.description,
-            studyImage: studyJson.imageUrl,
-            userId: userJson.userId,
-            userName: userJson.name,
-            userEmail: userJson.email,
-            userBlocked: userJson.blocked,
-            approved: false,
-            date: now.toISOString(),
-        };
+        if (studyJson?.public === true) {
+            // Calculate the date 100 days from now
+            now.setMonth(now.getMonth() + 3);
+            const expiryDate = now.toISOString();
 
-        const notificationRef = db.collection(process.env.notificationCollection).doc(notificationId);
-
-
-        // Update user document's events field
-        batch.update(userRef, {
-            study: admin.firestore.FieldValue.arrayUnion({
-                userId: userJson.userId,
+            notificationJson = {
+                message: 'Access granted',
                 studyId: studyJson.studyId,
                 studyTitle: studyJson.title,
                 studyDescription: studyJson.description,
                 studyImage: studyJson.imageUrl,
-                approved: false,
-                denied: false,
-                startDate: '',
-                expiryDate: ''
-            }),
-            alert: admin.firestore.FieldValue.arrayUnion({
-                type: 1,
-                heading: "Request Send",
-                text: `You have requested access for ${studyJson.title}`,
-                time: time
-            })
-        });
+                userId: userJson.userId,
+                userName: userJson.name,
+                userEmail: userJson.email,
+                userBlocked: userJson.blocked,
+                date: time,
+                approved: true,
+                time: time,
+                startDate: time,
+                expiryDate: expiryDate
+            };
 
-        batch.set(notificationRef, notificationJson);
+            batch.update(userRef, {
+                study: admin.firestore.FieldValue.arrayUnion({
+                    userId: userJson.userId,
+                    studyId: studyJson.studyId,
+                    studyTitle: studyJson.title,
+                    studyDescription: studyJson.description,
+                    studyImage: studyJson.imageUrl,
+                    approved: true,
+                    time: time,
+                    startDate: time,
+                    expiryDate: expiryDate
+                }),
+                alert: admin.firestore.FieldValue.arrayUnion({
+                    type: 2,
+                    heading: "Access Accepted",
+                    text: `You have been given access for ${studyJson?.title}`,
+                    time: time
+                })
+            });
+        } else if (studyJson?.public === false) {
+            notificationJson = {
+                notificationId: notificationId,
+                message: message,
+                studyId: studyJson.studyId,
+                studyTitle: studyJson.title,
+                studyDescription: studyJson.description,
+                studyImage: studyJson.imageUrl,
+                userId: userJson.userId,
+                userName: userJson.name,
+                userEmail: userJson.email,
+                userBlocked: userJson.blocked,
+                approved: false,
+                date: time,
+            };
+
+            const notificationRef = db.collection(process.env.notificationCollection).doc(notificationId);
+
+
+            // Update user document's events field
+            batch.update(userRef, {
+                study: admin.firestore.FieldValue.arrayUnion({
+                    userId: userJson.userId,
+                    studyId: studyJson.studyId,
+                    studyTitle: studyJson.title,
+                    studyDescription: studyJson.description,
+                    studyImage: studyJson.imageUrl,
+                    approved: false,
+                    time: time,
+                    startDate: '',
+                    expiryDate: ''
+                }),
+                alert: admin.firestore.FieldValue.arrayUnion({
+                    type: 1,
+                    heading: "Request Send",
+                    text: `You have requested access for ${studyJson.title}`,
+                    time: time
+                })
+            });
+
+            batch.set(notificationRef, notificationJson);
+        }
 
         cache.del('all_notification');
 
@@ -371,16 +417,8 @@ export const updateNotification = async (req, res) => {
         } else {
             type = 0;
 
-            // Find and update the object
-            updatedData = userData.map(item => {
-                if (item.studyId === notificationJson.studyId) {
-                    return {
-                        ...item,
-                        denied: true
-                    };
-                }
-                return item;
-            });
+            // Filter out the object with the matching studyId
+            updatedData = userData.filter(item => item.studyId !== notificationJson.studyId);
 
             batch.update(userRef, {
                 study: updatedData,

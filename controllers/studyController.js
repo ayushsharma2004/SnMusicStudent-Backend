@@ -8,14 +8,14 @@ import slugify from "slugify";
 import { v4 as uuidv4 } from 'uuid';
 import { uploadVideo } from "../DB/storage.js";
 import cache from "memory-cache"
-import { createData, deleteData, matchData, readAllData, readAllLimitData, readFieldData, readSingleData, searchByIDs, searchByKeyword, searchByTag, updateData } from "../DB/crumd.js";
+import { createData, deleteData, matchData, readAllData, readAllLimitData, readAllLimitPaginate, readFieldData, readSingleData, searchByIDs, searchByKeyword, searchByTag, updateData } from "../DB/crumd.js";
 import { storage } from "../DB/firebase.js";
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { addTextWatermarkToImage, addTextWatermarkToVideo, extractFrameFromVideo, uploadFile, uploadWaterMarkFile } from "../helper/mediaHelper.js";
 
 dotenv.config()
 
-const CACHE_DURATION = 24 * 60 * 60 * 1000; //24 hours
+const CACHE_DURATION = 1 * 60 * 60 * 1000; //1 hour
 
 // Multer configuration for file uploads
 const upload = multer({ storage: multer.memoryStorage() });
@@ -50,12 +50,16 @@ const bucket = admin.storage().bucket()
 */
 export const createStudy = async (req, res) => {
   try {
-    const { title, description } = req.body;
-    const files = req.files;
+    const { title, description, tags, isPublic, link } = req.body;
+    const files = req?.files;
     const studyId = uuidv4();
 
-    if (!title || !description || !files || !files.video) {
-      return res.status(400).send({ message: 'Title, description and video are required' });
+    var now = new Date();
+    var time = now.toISOString();
+
+    // Check if title, description, and video/link are present
+    if (!title || !description || (!link && (!files || !files.video))) {
+      return res.status(400).send({ message: 'Title, description, and video are required' });
     }
 
     const validateData = await matchData(process.env.studyCollection, 'title', title);
@@ -67,10 +71,15 @@ export const createStudy = async (req, res) => {
     let videoUrl = null;
     var vidWatermark, vidWatermarkUrl, imgWatermarkUrl;
 
-    if (files.video && files.video.length > 0) {
+    // Handle video and image processing only if link is not provided
+    if (!link && files.video && files.video.length > 0) {
       const videoFile = files.video[0];
-      vidWatermark = await addTextWatermarkToVideo(videoFile.buffer, 'SN MUSIC')
+
+      // Add watermark to video
+      vidWatermark = await addTextWatermarkToVideo(videoFile.buffer, 'SN MUSIC');
       vidWatermarkUrl = await uploadWaterMarkFile(vidWatermark, 'videos', `study/${studyId}/watermark/${videoFile.originalname}`);
+
+      // Handle image processing
       if (files.image && files.image.length > 0) {
         const imageFile = files.image[0];
         const watermarkedFrameBuffer = await addTextWatermarkToImage(imageFile.buffer, 'SN MUSIC');
@@ -85,19 +94,21 @@ export const createStudy = async (req, res) => {
         const watermarkedFrameBuffer = await addTextWatermarkToImage(frameFile.buffer, 'SN MUSIC');
         imgWatermarkUrl = await uploadFile(watermarkedFrameBuffer, 'images', `study/${studyId}/image/${watermarkedFrameBuffer.originalname}`);
       }
-    } else {
+    } else if (!link) {
       throw new Error('Video file is required.');
     }
 
+    // Construct the study JSON object
     const studyJson = {
       studyId: studyId,
       title: title,
       description: description,
-      videoUrl: vidWatermarkUrl,
-      imageUrl: imgWatermarkUrl,
-      tags: ["rag", "tracks"],
-      public: true,
-      timestamp: new Date(),
+      videoUrl: vidWatermarkUrl || null, // Ensure this is either null or a valid URL
+      imageUrl: imgWatermarkUrl || null, // Ensure this is either null or a valid URL
+      link: link || null, // Set link to null if it's not provided
+      tags: tags || [], // Ensure tags are an array
+      public: isPublic || false, // Ensure isPublic is a boolean
+      timestamp: time,
     };
 
     await createData(process.env.studyCollection, studyId, studyJson);
@@ -145,7 +156,7 @@ export const readAllStudy = async (req, res) => {
   try {
     var key = 'all_study'
     // var study = await readAllData(process.env.studyCollection);
-    var study = await readAllLimitData(process.env.studyCollection, ['studyId', 'imageUrl', 'description', 'title', 'videoUrl']);
+    var study = await readAllLimitData(process.env.studyCollection, ['studyId', 'imageUrl', 'description', 'title', 'videoUrl', 'link', 'public', 'timestamp']);
 
     console.log("setting data in cache")
     var response = {
@@ -159,6 +170,81 @@ export const readAllStudy = async (req, res) => {
       success: true,
       message: 'study read successfully',
       study: study
+    });
+  } catch (error) {
+    console.error('Error in reading all study:', error);
+    return res.status(500).send({
+      success: false,
+      message: 'Error in reading all study',
+      error: error.message,
+    });
+  }
+};
+
+export const readPaginateAllStudy = async (req, res) => {
+  try {
+    const { lastDoc, pageSize } = req.body;
+    const key = 'all_study';
+
+    let startAfterDoc = null;
+
+    // Use lastDoc._ref if it exists, or use a field like 'studyId' for pagination
+    if (lastDoc && lastDoc?.studyId) {
+      console.log('lastDoc');
+
+      startAfterDoc = lastDoc; // Firestore document reference
+    }
+
+    const study = await readAllLimitPaginate(
+      process.env.studyCollection,
+      ['studyId', 'imageUrl', 'description', 'title', 'videoUrl', 'link', 'public', 'timestamp'],
+      startAfterDoc, // Pass the correct reference for pagination
+      pageSize
+    );
+
+    const response = {
+      success: true,
+      message: 'Study read successfully',
+      study: study?.data, // The fetched data
+      lastDoc: study?.lastDoc, // Pass the last document reference back
+      count: study?.count // Pass the last document reference back
+    };
+
+    // Cache the response
+    cache.put(key, response, CACHE_DURATION);
+
+    return res.status(200).send(response);
+  } catch (error) {
+    console.error('Error in reading all study:', error);
+    return res.status(500).send({
+      success: false,
+      message: 'Error in reading all study',
+      error: error.message,
+    });
+  }
+};
+
+export const readAllPublicStudy = async (req, res) => {
+  try {
+    var key = 'study_public'
+
+    // var study = await readAllData(process.env.studyCollection);
+    var study = await matchData(process.env.studyCollection, 'public', true);
+
+    // Use map to extract the data from the documents
+    const studyData = study.docs.map((doc) => doc.data());
+
+    var response = {
+      success: true,
+      message: 'public study read successfully',
+      study: studyData
+    }
+    cache.put(key, response, CACHE_DURATION)
+
+    return res.status(201).send({
+      success: true,
+      message: 'study read successfully',
+      study: studyData
     });
   } catch (error) {
     console.error('Error in reading all study:', error);
