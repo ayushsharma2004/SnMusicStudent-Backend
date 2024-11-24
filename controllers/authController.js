@@ -6,33 +6,45 @@ import JWT from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { response } from 'express';
 
+/*
 // Summary: Function used for registering user/student
 // Action: POST
 // url: "http://localhost:8080/api/v1/auth/register-user"
 // req.body: {
-//   "name": "Ayush Sharma", 
-//   "email": "ayush.s.sharma04@gmail.com",
-//   "password": "123456", 
-//   "phone": "9326242640", 
-//   "address": "Mumbai"
-// } 
-// response: {
-//   "success": true,
-//   "message": "User registered successfully",
-//   "user": {
-//     "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
-//     "name": "Ayush Sharma",
-//     "email": "ayush.s.sharma04@gmail.com",
-//     "password": "$2b$10$BiKXnQsN8LKt7s02WScgneR88Cr.mVgNzrUIHGHb9QrbVgqVXXYWa",
-//     "phone": "9326242640",
-//     "address": "Mumbai",
-//     "study": [],
-//     "blocked": false,
-//     "role": 1
-//   },
-//   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImYyYjA3N2VkLWUzNTAtNDc4My04NzM4LTIyYzU5NjkwMzZkZCIsImlhdCI6MTcyMzcwODg0NywiZXhwIjoxNzIzOTY4MDQ3fQ.6Fa_QiWEMYin8HCTDM9YmGixMIeWEEP1iaV2Wfo76kg"
-// }
+  "name": "Raj Gamre", 
+  "email": "raj.gamre@gmail.com",
+  "password": "123456", 
+  "phone": "9889877860", 
+  "address": "Mumbai"
+}
+response: {
+  "success": true,
+  "message": "Request for registeration sent",
+  "user": {
+    "userId": "8e342bc7-aeec-4b18-a1f0-d8b8920d3a75",
+    "name": "Raj Gamre",
+    "email": "raj.gamre@gmail.com",
+    "password": "$2b$10$CY.0f4OXAc9yymmRp2BRfufzUvSQNxPljwozy3trcYcNiF7ZzGu1K",
+    "phone": "9889877860",
+    "address": "Mumbai",
+    "study": [],
+    "blocked": false,
+    "role": 0,
+    "alert": {
+      "elements": [
+        {
+          "type": 1,
+          "heading": "Request for Registeration",
+          "text": "Your request for registeration has been sent successfully",
+          "time": "2024-11-05T11:23:12.228Z"
+        }
+      ]
+    }
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjhlMzQyYmM3LWFlZWMtNGIxOC1hMWYwLWQ4Yjg5MjBkM2E3NSIsImlhdCI6MTczMDgwNTc5NCwiZXhwIjoxNzMxMDY0OTk0fQ.T-mLqZY5QFsLeY4fnqYGIeu8iF07D55Ff7H1vyNv1KM"
+} 
 // Register User
+*/
 export const registerController = async (req, res) => {
   try {
     const { name, email, password, phone, address } = req.body;
@@ -92,11 +104,11 @@ export const registerController = async (req, res) => {
       address: address,
       study: [],
       blocked: false,
-      role: 1,
+      role: 0,
       alert: admin.firestore.FieldValue.arrayUnion({
         type: 1,
-        heading: 'Welcome to SNMUSIC',
-        text: `You have been successfully registered`,
+        heading: 'Request for Registeration',
+        text: `Your request for registeration has been sent successfully`,
         time: time
       })
     };
@@ -115,44 +127,45 @@ export const registerController = async (req, res) => {
 
     return res.status(201).send({
       success: true,
-      message: 'User registered successfully',
+      message: 'Request for registeration sent',
       user: userJson,
       token
     });
   } catch (error) {
-    console.error('Error in registration:', error);
+    console.error('Error in registration request:', error);
     return res.status(500).send({
       success: false,
-      message: 'Error in registration',
+      message: 'Error in registration request',
       error: error.message,
     });
   }
 };
 
+/*
 // Summary: Function used for login user/student
 // Action: POST
 // url: "http://localhost:8080/api/v1/auth/login-user"
 // req.body: {
-//   "email": "ayush.s.sharma04@gmail.com",
-//   "password": "123456"
-// } 
-// response: {
-//   "success": true,
-//   "message": "Login successfully",
-//   "user": {
-//     "userId": "27d38b26-f074-481b-bb81-41a404901cc7",
-//     "name": "Ayush Sharma",
-//     "email": "ayush.s.sharma04@gmail.com",
-//     "phone": "9326242640",
-//     "address": "922, Laxman Wadi, Siddharth Nagar ,Korba Mithagad, Wadala East, Mumbai-400037",
-//     "study": [],
-//     "blocked": false,
-//     "role": 1
-//   },
-//   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjI3ZDM4YjI2LWYwNzQtNDgxYi1iYjgxLTQxYTQwNDkwMWNjNyIsImlhdCI6MTcyMzcwODQ1OSwiZXhwIjoxNzIzOTY3NjU5fQ.tOQC3rxIY-OQ2JEyEzbQHDmncoNSrcHYHNQ0L1T5Qp0"
-// }
-
+  "email": "ayush.s.sharma04@gmail.com",
+  "password": "123456"
+}
+  response: {
+  "success": true,
+  "message": "Login successfully",
+  "user": {
+    "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
+    "name": "Ayush Sharma",
+    "email": "ayush.s.sharma04@gmail.com",
+    "phone": "9326242640",
+    "address": "Mumbai",
+    "study": [],
+    "blocked": false,
+    "role": 1
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImYyYjA3N2VkLWUzNTAtNDc4My04NzM4LTIyYzU5NjkwMzZkZCIsImlhdCI6MTczMDgwNjA0NiwiZXhwIjoxNzMxMDY1MjQ2fQ.mAGJNgc0iZyzSaTrdKrJif1_73_sFyfrUw2v7UAGORw"
+}
 // Login User
+*/
 export const loginController = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -184,6 +197,12 @@ export const loginController = async (req, res) => {
 
     //validating user
     if (!userData) {
+      return res.status(404).send({
+        success: false,
+        message: 'User is not registered',
+      });
+    }
+    if (!userData?.role === 1) {
       return res.status(404).send({
         success: false,
         message: 'User is not registered',
@@ -294,7 +313,7 @@ export const verifyMail = async (req, res) => {
 
     // Verify OTP
     const isOtpValid = await verifyOtp(email, otp);
-    
+
     if (!isOtpValid) {
       return res.status(401).send({
         success: false,
@@ -305,7 +324,7 @@ export const verifyMail = async (req, res) => {
       return res.status(200).send({
         success: true,
         message: 'OTP verified to email successfully',
-        isOtpValid 
+        isOtpValid
       });
     }
   } catch (error) {
@@ -342,6 +361,9 @@ export const forgotPasswordController = async (req, res) => {
   try {
     const { email, newPassword } = req.body;
 
+    var now = new Date();
+    var time = now.toISOString();
+
     // Validation
     if (!email) {
       return res.status(400).send({ message: 'Email is required' });
@@ -359,7 +381,15 @@ export const forgotPasswordController = async (req, res) => {
     // Hash the new password
     const hashed = await hashPassword(newPassword);
 
-    const update = await updateMatchData(process.env.userCollection, 'email', email, { password: hashed });
+    const update = await updateMatchData(process.env.userCollection, 'email', email, {
+      password: hashed,
+      alert: admin.firestore.FieldValue.arrayUnion({
+        type: 2,
+        heading: 'Password Updated Successfully',
+        text: `Your password has been changed successfully`,
+        time: time
+      })
+    });
     const updateData = update.data();
 
     res.status(200).send({
@@ -424,7 +454,7 @@ export const updateUserController = async (req, res) => {
       console.log(imageFile);
       photoUrl = await uploadFile(imageFile, 'images', `user/${userId}/${'photoUrl'}/${imageFile.originalname}`);
       if (photoUrl) updates.photoUrl = photoUrl;
-  }
+    }
 
     // Update student data in Firestore
     await updateData(process.env.userCollection, userId, updates);
@@ -472,7 +502,7 @@ export const blockUser = async (req, res) => {
       message = 'User Unblocked successfully'
     }
 
-    var blockUser = await updateData(process.env.userCollection, userId, {blocked: block});
+    var blockUser = await updateData(process.env.userCollection, userId, { blocked: block });
     console.log('success');
 
     return res.status(201).send({

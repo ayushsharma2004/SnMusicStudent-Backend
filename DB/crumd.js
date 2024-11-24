@@ -97,38 +97,42 @@ export const readAllLimitData = async (collectionName, fields) => {
 };
 export const readAllLimitPaginate = async (collectionName, fields, startAfterDoc = null, pageSize = 20) => {
   try {
-    let query = db.collection(collectionName).limit(pageSize);
-
-    // Apply the select if fields are provided
-    if (fields && fields.length > 0) {
-      query = query.select(...fields);
-    }
-
-    // Apply pagination if startAfterDoc is provided
+    let query = null;
     if (startAfterDoc) {
-      query = query.startAfter(startAfterDoc);
+      console.log(startAfterDoc);
+      console.log(startAfterDoc?.timestamp);
+
+      query = db.collection(collectionName)
+        .orderBy('timestamp', 'desc')
+        .startAfter(startAfterDoc?.timestamp)
+        .limit(pageSize); // Assuming you have a 'timestamp' field for ordering
+    } else {
+      query = db.collection(collectionName)
+        .orderBy('timestamp', 'desc')
+        .limit(pageSize); // Assuming you have a 'timestamp' field for ordering
     }
+
+    // if (fields && fields.length > 0) {
+    //   query = query.select(...fields);
+    // }
 
     const querySnapshot = await query.get();
 
-    let queryData = [];
-    querySnapshot.forEach((doc) => {
-      queryData.push(doc.data());
-    });
-
+    const queryData = querySnapshot.docs.map(doc => doc.data());
 
     // Get the last document in the snapshot to use for the next page
-    const lastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+    const lastDoc = querySnapshot.docs.length > 0 ? querySnapshot.docs[querySnapshot.docs.length - 1] : null;
 
     return {
       data: queryData,
-      lastDoc: lastDoc // Return the last document for pagination
+      lastDoc: lastDoc ? lastDoc.data() : null // Return the document reference (_ref) for pagination
     };
   } catch (error) {
     console.error("Error retrieving data:", error);
-    throw error; // Re-throw the error after logging it
+    throw error;
   }
 };
+
 
 export const readAllSubData = async (firstCollectionName, secondCollectionName, id) => {
   try {
@@ -193,7 +197,7 @@ export const readSingleSubData = async (firstCollectionName, secondCollectionNam
   }
 };
 
-export const readFieldData = async (collectionName, id, fieldName, sort=false) => {
+export const readFieldData = async (collectionName, id, fieldName, sort = false) => {
   try {
     const docRef = await db.collection(collectionName).doc(id).get();
 
@@ -292,17 +296,21 @@ export const searchLimitInnerFieldData = async (collectionName, id, fieldName, f
 
 export const searchByKeyword = async (collectionName, keyword, limit = 20) => {
   try {
+    // Convert the keyword to lowercase for case-insensitive comparison
+    const lowerCaseKeyword = keyword.toLowerCase();
+
     // Fetch documents with a limit
     const querySnapshot = await db.collection(collectionName).limit(limit).get();
 
     let results = [];
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      // Perform keyword filtering on desired fields
+
+      // Perform keyword filtering on desired fields in a case-insensitive manner
       if (
-        data.title && data.title.includes(keyword) ||
-        data.description && data.description?.includes(keyword) ||
-        data.tags && data.tags?.includes(keyword)
+        (data?.title && data?.title.toLowerCase().includes(lowerCaseKeyword)) ||
+        (data?.description && data?.description.toLowerCase().includes(lowerCaseKeyword)) ||
+        data?.tags && data?.tags?.includes(lowerCaseKeyword)
       ) {
         results.push(data);
       }
@@ -317,6 +325,9 @@ export const searchByKeyword = async (collectionName, keyword, limit = 20) => {
 
 export const searchByTag = async (collectionName, keyword = '', tags = [], limit = 20) => {
   try {
+    // Convert the keyword to lowercase for case-insensitive comparison
+    const lowerCaseKeyword = keyword.toLowerCase();
+
     // Fetch documents with a limit
     const querySnapshot = await db.collection(collectionName).limit(limit).get();
 
@@ -331,12 +342,19 @@ export const searchByTag = async (collectionName, keyword = '', tags = [], limit
       // Check if the document matches the criteria Check if the tags array contains all the specified tags
       tags.forEach((tag) => {
         if (
-          data.tags && data.tags.includes(tag)
+          data?.tags && data?.tags.includes(tag)
         ) {
           matchesTag = true;
         }
       })
-      const matchesKeyword = (data.title?.includes(keyword) || data.description?.includes(keyword));
+      var matchesKeyword = false;
+      // Perform keyword filtering on desired fields in a case-insensitive manner
+      if (
+        (data?.title && data?.title.toLowerCase().includes(lowerCaseKeyword)) ||
+        (data?.description && data?.description.toLowerCase().includes(lowerCaseKeyword))
+      ) {
+        matchesKeyword = true;
+      }
 
       // Add document to results if it matches either criterion
       if (matchesTag || matchesKeyword) {
@@ -380,7 +398,9 @@ export const searchByIdentity = async (collectionName, identity, limit = 20) => 
 export const searchByIDs = async (collectionName, ids = [], limit = 20) => {
   try {
     // Fetch documents with a limit
-    const querySnapshot = await db.collection(collectionName).limit(limit).get();
+    const querySnapshot = await db.collection(collectionName)
+      .orderBy('timestamp', 'desc')
+      .get();
 
     // Initialize results array
     let results = [];
@@ -393,7 +413,7 @@ export const searchByIDs = async (collectionName, ids = [], limit = 20) => {
       // Check if the document matches the criteria Check if the tags array contains all the specified tags
       ids.forEach((id) => {
         if (
-          data.studyId === id
+          data?.studyId === id
         ) {
           matchesIds = true;
         }

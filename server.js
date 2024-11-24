@@ -20,6 +20,7 @@ const app = express();
 
 //middlewares
 app.use(cors());
+app.use(cors({ origin: '*' })); // Allow all origins for testing
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(morgan('combined'));
@@ -43,7 +44,7 @@ app.use('/api/v1/notification', notificationRoutes);
 //rest api
 app.get('/', (req, res) => {
   try {
-    res.send('<h1>Welcome to E-commerce</h1>');
+    res.send('<h1>Welcome to SNMUSIC</h1>');
   } catch (error) {
     console.log(error);
   }

@@ -175,45 +175,45 @@ export const readSingleUser = async (req, res) => {
 
 
 /*
-  Summary: Function to read approved study materials wich the user has access of
+  Summary: Function to read all user alerts 
   Action: POST
-  url: "http://localhost:8080/api/v1/user/read-user-study"
+  url: "http://localhost:8080/api/v1/user/read-user-alert"
   req.body: {
     "userId": "f2b077ed-e350-4783-8738-22c5969036dd"
   }
   response: {
     "success": true,
-    "message": "study read successfully",
-    "study": [
+    "message": "user read successfully",
+    "alerts": [
       {
-        "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fwatermark%2FvidInstrument6.mp4?alt=media&token=fb501109-032b-4051-becf-92dd48167bbd",
-        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fimage%2Fundefined?alt=media&token=873086c0-f8d5-4609-ae9a-59677cb6243c",
-        "description": "desc2",
-        "studyId": "33e93fad-d0e0-4a89-89ae-8f80cac2dd6c",
-        "tags": [
-          "rag",
-          "songs"
-        ],
-        "timestamp": {
-          "_seconds": 1722241643,
-          "_nanoseconds": 921000000
-        },
-        "title": "study title2"
-      },      
+        "type": 0,
+        "heading": "Access Denied",
+        "text": "Your request has been denied for study title2",
+        "time": "2024-08-23T17:17:11.330Z"
+      },
       {
-        "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fwatermark%2FvidInstrument6.mp4?alt=media&token=fb501109-032b-4051-becf-92dd48167bbd",
-        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fimage%2Fundefined?alt=media&token=873086c0-f8d5-4609-ae9a-59677cb6243c",
-        "description": "desc2",
-        "studyId": "193fad-d0e0-4a89-89ae-8f80cac2dd6c",
-        "tags": [
-          "rag",
-          "songs"
-        ],
-        "timestamp": {
-          "_seconds": 1722241643,
-          "_nanoseconds": 921000000
-        },  
-        "title": "study title1"
+        "type": 1,
+        "heading": "Request Send",
+        "text": "You have requested access for study title2",
+        "time": "2024-08-23T17:16:41.002Z"
+      },
+      {
+        "type": 2,
+        "heading": "Access Accepted",
+        "text": "You have been given access for study title1",
+        "time": "2024-08-23T17:15:58.216Z"
+      },
+      {
+        "type": 1,
+        "heading": "Request Send",
+        "text": "You have requested access for study title1",
+        "time": "2024-08-23T17:03:20.137Z"
+      },
+      {
+        "type": 1,
+        "heading": "Welcome to SNMUSIC",
+        "text": "You have been successfully registered",
+        "time": "2024-08-23T16:46:41.811Z"
       }
     ]
   }
@@ -392,7 +392,7 @@ export const readLimitedUserStudy = async (req, res) => {
 /*
   Summary: Function to read unapproved study materials wich the user has access of
   Action: POST
-  url: "http://localhost:8080/api/v1/user/read-user-study"
+  url: "http://localhost:8080/api/v1/user/read-user-unapproved-study"
   req.body: {
     "userId": "f2b077ed-e350-4783-8738-22c5969036dd"
   }
