@@ -240,21 +240,16 @@ export const loginController = async (req, res) => {
       }
     );
     console.log(token)
-    res.cookie("accessToken", token, { expire: Date.now() + 24 * 60 * 60 * 1000, httpOnly: true, sameSite: "none", secure: false }).send({
-      success: true,
-      user: {
-        userId: userData.userId,
-        name: userData.name,
-        email: userData.email,
-        phone: userData.phone,
-        address: userData.address,
-        study: userData.study,
-        blocked: userData.blocked,
-        role: userData.role
-      }
-    });
 
-    console.log('success');
+    res.cookie("accessToken", token, {
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      // secure: false, // Set to true if using HTTPS
+      // sameSite: "None"
+    });
+  
+    res.status(200).send("cookies are sent");
+    console.log("success")
   } catch (error) {
     console.log(error);
     res.status(500).send({
