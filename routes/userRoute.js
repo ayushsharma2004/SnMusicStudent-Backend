@@ -16,29 +16,30 @@ const router = express.Router();
 
 //routing
 
-//Verify Phone Number || POST
+// Route to read all users || GET
 router.get('/read-all-user', readAllUser);
 
-//Verify Phone Number || POST
+// Route to read user identity || POST
 router.post('/read-identity-user', readIdentityUser);
 
-//Verify Phone Number || POST
+// Route to read a single user || POST
 router.post('/read-user', readSingleUser);
 
-//Verify Phone Number || POST
+// Route to read approved studies for a user || POST
 router.post('/read-user-study', readUserStudy);
 
-//Verify Phone Number || POST
+// Route to read all user alerts || POST
 router.post('/read-user-alert', readAllUserAlert);
 
-//Verify Phone Number || POST
+// Route to read limited approved studies for a user || POST
 router.post('/read-limit-user-study', readLimitedUserStudy);
 
-//Verify Phone Number || POST
+// Route to read unapproved studies for a user || POST
 router.post('/read-user-unapproved-study', readUserUnapprovedStudy);
 
-//Verify Phone Number || POST
+// Route to read a single study for a user || POST
 router.post('/read-single-user-study', readSingleUserStudy);
+
 
 
 export default router;

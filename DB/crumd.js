@@ -239,6 +239,18 @@ export const readSubFieldData = async (firstCollectionName, secondCollectionName
   }
 };
 
+/* 
+// Summary: Retrieves and filters study data based on a user's document and a specified filter.
+// Action: Fetches data from a specific field in the user's document and filters it based on the provided criteria.
+// Input:
+// collectionName: The collection name (e.g., users) where the user's data is stored.
+// id: The user's unique identifier (userId).
+// fieldName: The field name (e.g., 'study') in the document to extract data from.
+// filterName: The field in the data to filter on (e.g., 'approved').
+// filterValue: The value to match (e.g., true for approved studies).
+// Output: Returns filtered study data where the specified field matches the filter value (e.g., approved = true).
+// Error Handling: If the document or the field data is not found, returns null.
+*/
 export const searchInnerFieldData = async (collectionName, id, fieldName, filterName, filterValue) => {
   try {    // Reference to the user's document
     const docRef = db.collection(collectionName).doc(id);
@@ -265,6 +277,19 @@ export const searchInnerFieldData = async (collectionName, id, fieldName, filter
   }
 };
 
+/* 
+// Summary: Retrieves and filters a limited number of study data based on a user's document and specified filter.
+// Action: Fetches data from a specific field in the user's document, filters it by a given condition, and limits the number of returned results.
+// Input:
+// collectionName: The collection name (e.g., users) where the user's data is stored.
+// id: The user's unique identifier (userId).
+// fieldName: The field name (e.g., 'study') in the document to extract data from.
+// filterName: The field in the data to filter on (e.g., 'approved').
+// filterValue: The value to match (e.g., true for approved studies).
+// limit: The maximum number of items to return.
+// Output: Returns a limited set of filtered study data based on the criteria provided.
+// Error Handling: If the document or the field data is not found, returns null.
+*/
 export const searchLimitInnerFieldData = async (collectionName, id, fieldName, filterName, filterValue, limit) => {
   try {    // Reference to the user's document
     const docRef = db.collection(collectionName).doc(id);
@@ -293,6 +318,20 @@ export const searchLimitInnerFieldData = async (collectionName, id, fieldName, f
     return null;
   }
 };
+
+/* 
+// Summary: Utility function for performing a keyword search in a Firestore collection.
+// Parameters:
+// - collectionName (string): The name of the Firestore collection to search.
+// - keyword (string): The keyword to filter the documents by (case-insensitive).
+// - limit (number): The maximum number of documents to retrieve (default is 20).
+// Returns:
+// - An array of documents that match the keyword in their `title`, `description`, or `tags` fields.
+// Notes:
+// - Filters results case-insensitively by converting the keyword and fields to lowercase.
+// - Returns matching results with a default limit of 20 documents for optimization.
+// - Logs and rethrows any errors encountered during the process.
+*/
 
 export const searchByKeyword = async (collectionName, keyword, limit = 20) => {
   try {
@@ -323,6 +362,32 @@ export const searchByKeyword = async (collectionName, keyword, limit = 20) => {
   }
 };
 
+/*
+// Summary: Helper function to search for documents in a Firestore collection by tags and optional keywords.
+
+// Parameters:
+// - collectionName (string): Name of the Firestore collection to query.
+// - keyword (string): Optional keyword for filtering (default: '').
+// - tags (array): Tags to filter documents by (e.g., ["flute", "advanced"]).
+// - limit (number): Number of documents to fetch (default: 20).
+
+// Returns:
+// - An array of matching documents from the Firestore collection.
+
+// Process:
+// 1. Convert the `keyword` to lowercase for case-insensitive comparison.
+// 2. Query Firestore to fetch a limited number of documents from the specified collection.
+// 3. Iterate through the documents and perform the following checks:
+//    - Check if the `tags` field in the document includes any of the specified tags.
+//    - Check if the `title` or `description` fields contain the keyword (case-insensitive).
+// 4. Add documents to the results array if they match either the tags or the keyword criteria.
+// 5. Return the results array.
+// 6. Log errors and re-throw them for higher-level error handling.
+
+// Notes:
+// - Supports partial keyword matching on the `title` and `description` fields.
+// - Can be extended to include additional fields or conditions for filtering.
+*/
 export const searchByTag = async (collectionName, keyword = '', tags = [], limit = 20) => {
   try {
     // Convert the keyword to lowercase for case-insensitive comparison
@@ -369,6 +434,26 @@ export const searchByTag = async (collectionName, keyword = '', tags = [], limit
   }
 };
 
+/* 
+// Summary: Function to search users by identity in the Firestore collection based on a keyword.
+// Action: Function
+// URL: N/A (Used internally in the main code)
+
+// Parameters:
+// - collectionName: The name of the Firestore collection (e.g., 'users') to search within.
+// - identity: The keyword used to match users' fields (name, email, userId, address).
+// - limit: The maximum number of user results to return (default is 20).
+
+// Returns:
+// An array of user data objects that match the provided identity keyword.
+
+
+// Notes:
+// - Searches for partial matches of the `identity` keyword across the fields: `name`, `email`, `userId`, and `address`.
+// - The search is case-insensitive and supports partial matching (e.g., "john" can match "John Doe" and "johnny@example.com").
+// - The function fetches a maximum of 20 results by default, or a custom number if specified in the `limit` parameter.
+// - If no matching users are found, an empty array is returned.
+*/
 export const searchByIdentity = async (collectionName, identity, limit = 20) => {
   try {
     // Fetch documents with a limit
@@ -395,6 +480,26 @@ export const searchByIdentity = async (collectionName, identity, limit = 20) => 
   }
 };
 
+/*
+// Summary: Helper function to retrieve documents from Firestore by study IDs.
+// Description:
+// - Fetches all documents from a specified Firestore collection, ordered by `timestamp` in descending order.
+// - Filters the documents to include only those whose `studyId` matches any ID in the provided `ids` array.
+// - Limits the number of results returned to the specified value (default: 20).
+
+// Parameters:
+// - `collectionName` (string): Name of the Firestore collection to query.
+// - `ids` (array): Array of study IDs to match against the `studyId` field.
+// - `limit` (number): Maximum number of documents to return (default: 20).
+
+// Returns:
+// - An array of study materials that match the provided IDs.
+
+// Notes:
+// - Performs exact matching for the `studyId` field in a case-sensitive manner.
+// - Ensures consistent ordering by `timestamp` in descending order.
+// - Supports additional filtering and validation if needed for specific use cases.
+*/
 export const searchByIDs = async (collectionName, ids = [], limit = 20) => {
   try {
     // Fetch documents with a limit

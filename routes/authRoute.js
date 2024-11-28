@@ -11,32 +11,40 @@ import {
 import { isStudent, requireSignIn } from '../middleware/authMiddleware.js';
 import multer, { memoryStorage } from 'multer';
 // import { create } from '../DB/FCRUD.js';
-const upload = multer({ storage: multer.memoryStorage() })
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 }, // 10MB file size limit
+}).fields([
+  { name: 'image', maxCount: 1 }
+]);
+
 
 //route object
 const router = express.Router();
 
 //routing
 
-//Register User || POST
-router.post('/register-user', registerController);
+// Register a new user || POST
+router.post('/register-user', upload, registerController);
 
-//Login User || POST
+// Log in an existing user || POST
 router.post('/login-user', loginController);
 
-//Send otp to User mail || POST
-router.post("/send-mail", sendMail)
+// Send OTP to user email || POST
+router.post("/send-mail", sendMail);
 
-//Verify otp to User mail || POST
-router.post("/verify-mail", verifyMail)
+// Verify OTP from user email || POST
+router.post("/verify-mail", verifyMail);
 
-//Update old password with new new password || POST
-router.post("/forgot-password", forgotPasswordController)
+// Update user password || POST
+router.post("/forgot-password", upload, forgotPasswordController);
 
-//Update User || POST
-router.post("/update-user", updateUserController)
+// Update user details || POST
+router.post("/update-user", updateUserController);
 
-//Login User || POST
+// Block a user || POST
 router.post('/block-user', blockUser);
 
 

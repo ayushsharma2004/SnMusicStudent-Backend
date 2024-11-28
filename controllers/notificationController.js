@@ -22,35 +22,79 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const bucket = admin.storage().bucket()
 
-/*
-    Summery: Used for creating notification request for study and adding it in user doc study field
-    Action: POST
-    url: "http://localhost:8080/api/v1/notification/create-notification"
-    req.body: {
-        "message": "Not decided",
-        "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
-        "studyId": "9f88c762-2857-4266-8b55-78a82972d881"
-    }
-    response: {
-        "success": true,
-        "message": "Notification created successfully",
-        "notification": {
-            "notificationId": "6b4c1980-1774-45c2-aeca-7ecaf12b4140",
-            "message": "New Study Added",
-            "studyId": "553ed00c-36e7-4a7c-bc7a-a021092fb1e2",
-            "studyTitle": "study title1",
-            "studyDescription": "desc1",
-            "studyImage": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F553ed00c-36e7-4a7c-bc7a-a021092fb1e2%2Fimage%2Fundefined?alt=media&token=2a815476-0b56-44f1-9cf1-6807770c9dd4",
-            "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
-            "userName": "Ayush Sharma",
-            "userEmail": "ayush.s.sharma04@gmail.com",
-            "userBlocked": false,
-            "approved": false,
-            "date": "2024-08-15T10:07:53.125Z"
-        }
-    }
+/* 
+// Summary: Endpoint for creating a notification for study material access.
+// Action: POST
+// URL: "http://localhost:8080/api/v1/notification/create-notification"
+
+// Request:
+// req.body: {
+//   "message": "Message text for the notification",
+//   "userId": "user-uuid",
+//   "studyId": "study-uuid"
+// }
+
+// Response:
+// Success:
+// {
+//   "success": true,
+//   "message": "Notification created successfully",
+//   "notification": {
+//     "notificationId": "uuid",
+//     "message": "Access granted",
+//     "studyId": "study-uuid",
+//     "studyTitle": "Study material title",
+//     "studyDescription": "Study material description",
+//     "studyImage": "https://storage.example.com/study/image.jpg",
+//     "userId": "user-uuid",
+//     "userName": "User Name",
+//     "userEmail": "user@example.com",
+//     "userBlocked": false,
+//     "date": "2024-11-28T14:30:45.000Z",
+//     "approved": false,
+//   }
+// }
+
+//OR
+
+// {
+//   "success": true,
+//   "message": "Notification created successfully",
+//   "notification": {
+//     "notificationId": "uuid",
+//     "message": "Access granted",
+//     "studyId": "study-uuid",
+//     "studyTitle": "Study material title",
+//     "studyDescription": "Study material description",
+//     "studyImage": "https://storage.example.com/study/image.jpg",
+//     "userId": "user-uuid",
+//     "userName": "User Name",
+//     "userEmail": "user@example.com",
+//     "userBlocked": false,
+//     "date": "2024-11-28T14:30:45.000Z",
+//     "approved": true,
+//     "time": "2024-11-28T14:30:45.000Z",
+//     "startDate": "2024-11-28T14:30:45.000Z",
+//     "expiryDate": "2025-02-28T14:30:45.000Z"
+//   }
+// }
+
+// Failure:
+// {
+//   "success": false,
+//   "message": "Detailed error message"
+// }
+
+// Notes:
+// - Checks if required fields (`message`, `userId`, `studyId`) are provided.
+// - Validates if the user has already requested access for the same study.
+// - If the study is public, grants access and sends an approval notification to the user.
+// - If the study is not public, sends a request notification to the user.
+// - Uses Firestore batch operations to update user data and create the notification.
+// - Deletes the notification cache to ensure fresh data.
+// - Sends a 201 response with the notification data or a 500 error on failure.
 */
-// Create Notification
+
 export const createNotification = async (req, res) => {
     try {
         const { message, userId, studyId } = req.body;
@@ -209,33 +253,72 @@ export const createNotification = async (req, res) => {
     }
 };
 
-
-//function to read all notifications details
 /* 
-    request url = http://localhost:8080/api/v1/notification/read-all-notification
-    method = GET
-    response: {
-        "success": true,
-        "message": "notification read successfully",
-        "notification": [
-            {
-            "date": "2024-08-15T10:07:53.125Z",
-            "approved": false,
-            "studyDescription": "desc1",
-            "studyImage": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F553ed00c-36e7-4a7c-bc7a-a021092fb1e2%2Fimage%2Fundefined?alt=media&token=2a815476-0b56-44f1-9cf1-6807770c9dd4",
-            "notificationId": "6b4c1980-1774-45c2-aeca-7ecaf12b4140",
-            "studyId": "553ed00c-36e7-4a7c-bc7a-a021092fb1e2",
-            "userEmail": "ayush.s.sharma04@gmail.com",
-            "studyTitle": "study title1",
-            "userBlocked": false,
-            "message": "New Study Added",
-            "userName": "Ayush Sharma",
-            "userId": "f2b077ed-e350-4783-8738-22c5969036dd"
-            }
-        ]
-    }
-*/
+// Summary: Endpoint for reading all notifications.
+// Action: GET
+// URL: "http://localhost:8080/api/v1/notification/read-all-notification"
 
+// Request:
+// req.body: {}  // No body required for this request
+
+// Response:
+// Success:
+// {
+//   "success": true,
+//   "message": "Notification read successfully",
+//   "notification": [
+//   {
+//   "success": true,
+//   "message": "Notification created successfully",
+//   "notification": {
+//     "notificationId": "uuid",
+//     "message": "Access granted",
+//     "studyId": "study-uuid",
+//     "studyTitle": "Study material title",
+//     "studyDescription": "Study material description",
+//     "studyImage": "https://storage.example.com/study/image.jpg",
+//     "userId": "user-uuid",
+//     "userName": "User Name",
+//     "userEmail": "user@example.com",
+//     "userBlocked": false,
+//     "date": "2024-11-28T14:30:45.000Z",
+//     "approved": false,
+//   }
+// },
+//     {
+//       "notificationId": "uuid",
+//       "message": "Access granted",
+//       "studyId": "study-uuid",
+//       "studyTitle": "Study material title",
+//       "studyDescription": "Study material description",
+//       "studyImage": "https://storage.example.com/study/image.jpg",
+//       "userId": "user-uuid",
+//       "userName": "User Name",
+//       "userEmail": "user@example.com",
+//       "userBlocked": false,
+//       "date": "2024-11-28T14:30:45.000Z",
+//       "approved": true,
+//       "time": "2024-11-28T14:30:45.000Z",
+//       "startDate": "2024-11-28T14:30:45.000Z",
+//       "expiryDate": "2025-02-28T14:30:45.000Z"
+//     },
+//     ...
+//   ]
+// }
+
+// Failure:
+// {
+//   "success": false,
+//   "message": "Error in reading all notification",
+//   "error": "Detailed error message"
+// }
+
+// Notes:
+// - Fetches all notifications from the Firestore `notificationCollection`.
+// - Returns a list of notifications associated with different users and studies.
+// - If successful, returns a 201 status with the list of notifications.
+// - If any error occurs, returns a 500 status with the error details.
+*/
 export const readAllNotification = async (req, res) => {
     try {
         // var notification = await readAllData(process.env.notificationCollection);
@@ -255,32 +338,49 @@ export const readAllNotification = async (req, res) => {
         });
     }
 };
-
-//function to read single document of our Notification details
 /* 
-    request url = http://localhost:8080/api/v1/notification/read-notification
-    method = POST
-    {
-      "notificationId": "jjhjhjsagsa" //your doc id
-    }
-    response: {
-        "success": true,
-        "message": "notification read successfully",
-        "notification": {
-            "date": "2024-08-15T10:07:53.125Z",
-            "approved": false,
-            "studyDescription": "desc1",
-            "studyImage": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F553ed00c-36e7-4a7c-bc7a-a021092fb1e2%2Fimage%2Fundefined?alt=media&token=2a815476-0b56-44f1-9cf1-6807770c9dd4",
-            "notificationId": "6b4c1980-1774-45c2-aeca-7ecaf12b4140",
-            "studyId": "553ed00c-36e7-4a7c-bc7a-a021092fb1e2",
-            "userEmail": "ayush.s.sharma04@gmail.com",
-            "studyTitle": "study title1",
-            "userBlocked": false,
-            "message": "New Study Added",
-            "userName": "Ayush Sharma",
-            "userId": "f2b077ed-e350-4783-8738-22c5969036dd"
-        }
-    }
+// Summary: Endpoint for reading a single notification by its ID.
+// Action: POST
+// URL: "http://localhost:8080/api/v1/notification/read-single-notification"
+
+// Request:
+// req.body: {
+//   "notificationId": "uuid"  // Unique ID of the notification to be read
+// }
+
+// Response:
+// Success:
+// {
+//   "success": true,
+//   "message": "Notification created successfully",
+//   "notification": {
+//     "notificationId": "uuid",
+//     "message": "Access granted",
+//     "studyId": "study-uuid",
+//     "studyTitle": "Study material title",
+//     "studyDescription": "Study material description",
+//     "studyImage": "https://storage.example.com/study/image.jpg",
+//     "userId": "user-uuid",
+//     "userName": "User Name",
+//     "userEmail": "user@example.com",
+//     "userBlocked": false,
+//     "date": "2024-11-28T14:30:45.000Z",
+//     "approved": false,
+//   }
+// }
+
+// Failure:
+// {
+//   "success": false,
+//   "message": "Error in reading notification",
+//   "error": "Detailed error message"
+// }
+
+// Notes:
+// - The `notificationId` field in the request body is required to fetch the notification data.
+// - If the `notificationId` is not provided, the server responds with a 400 status code and an error message.
+// - If the notification with the given ID is found, it returns a 201 status with the notification data.
+// - If any error occurs, a 500 status code is returned with the error details.
 */
 export const readSingleNotification = async (req, res) => {
     try {
@@ -308,50 +408,58 @@ export const readSingleNotification = async (req, res) => {
     }
 };
 
-//function to update our Notifications details
 /* 
-    request url = http://localhost:8080/api/v1/notification/update-notification
-    method = POST
-    req.body: {
-        "notificationId": "jjhjhjsagsa" //your notification doc id,
-        "approved": true/false 
-    }
-    response: {
-        "success": true,
-        "message": "Access Data updated successfully",
-        "studyData": {
-            "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
-            "studyId": "33e93fad-d0e0-4a89-89ae-8f80cac2dd6c",
-            "studyTitle": "study title2",
-            "studyDescription": "desc2",
-            "studyImage": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fimage%2Fundefined?alt=media&token=873086c0-f8d5-4609-ae9a-59677cb6243c",
-            "approved": false,
-            "startDate": "",
-            "expiryDate": ""
-        },
-        "updatedData": [
-            {
-                "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
-                "studyId": "553ed00c-36e7-4a7c-bc7a-a021092fb1e2",
-                "studyTitle": "study title1",
-                "studyDescription": "desc1",
-                "studyImage": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F553ed00c-36e7-4a7c-bc7a-a021092fb1e2%2Fimage%2Fundefined?alt=media&token=2a815476-0b56-44f1-9cf1-6807770c9dd4",
-                "approved": false,
-                "startDate": "",
-                "expiryDate": ""
-            },
-            {
-                "userId": "f2b077ed-e350-4783-8738-22c5969036dd",
-                "studyId": "33e93fad-d0e0-4a89-89ae-8f80cac2dd6c",
-                "studyTitle": "study title2",
-                "studyDescription": "desc2",
-                "studyImage": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fimage%2Fundefined?alt=media&token=873086c0-f8d5-4609-ae9a-59677cb6243c",
-                "approved": true,
-                "startDate": "2024-08-15T15:45:42.743Z",
-                "expiryDate": "2024-11-15T15:45:42.743Z"
-            }
-        ]
-    }
+// Summary: Endpoint for updating a notification and the associated study access for a user.
+// Action: POST
+// URL: "http://localhost:8080/api/v1/notification/update-notification"
+
+// Request:
+// req.body: {
+//   "notificationId": "uuid",  // Unique ID of the notification to update
+//   "approved": true/false      // Approval status for the notification (true = approved, false = denied)
+// }
+
+// Response:
+// Success:
+// {
+//   "success": true,
+//   "message": "Access Data updated successfully",
+//   "studyData": {
+//     "studyId": "study-uuid",
+//     "studyTitle": "Study material title",
+//     "studyDescription": "Study material description",
+//     "studyImage": "https://storage.example.com/study/image.jpg",
+//     "approved": true,
+//     "startDate": "2024-11-28T14:30:45.000Z",
+//     "expiryDate": "2025-02-28T14:30:45.000Z"
+//   },
+//   "updatedData": [
+//     {
+//       "userId": "user-uuid",
+//       "studyId": "study-uuid",
+//       "approved": true,
+//       "startDate": "2024-11-28T14:30:45.000Z",
+//       "expiryDate": "2025-02-28T14:30:45.000Z",
+//       "studyTitle": "Study material title"
+//     }
+//   ]
+// }
+
+// Failure:
+// {
+//   "success": false,
+//   "message": "Error in updating study",
+//   "error": "Detailed error message"
+// }
+
+// Notes:
+// - The `notificationId` is required to identify the notification that needs to be updated.
+// - The `approved` field indicates whether the request is approved (true) or denied (false).
+// - If approved, the user's study access is updated with the start date and expiry date set to 3 months from now.
+// - If denied, the study access is removed from the user's study list.
+// - The corresponding alert is added to the user's alerts and the notification is deleted.
+// - If the notification does not exist, a 404 status code is returned.
+// - Returns the updated study data and the modified user data.
 */
 export const updateNotification = async (req, res) => {
     try {

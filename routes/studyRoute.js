@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { createStudy, deleteStudy, readAllPublicStudy, readAllStudy, readIDsStudy, readKeywordStudy, readPaginateAllStudy, readSingleStudy, readStudyVideo, readTagsStudy, updateStudy } from '../controllers/studyController.js';
+import { createStudy, deleteStudy, readAllPublicStudy, readAllStudy, readIDsStudy, readKeywordStudy, readPaginateAllStudy, readSingleStudy, readTagsStudy, updateStudy } from '../controllers/studyController.js';
 
 // Configure multer for file uploads
 const upload = multer({
@@ -15,41 +15,34 @@ const upload = multer({
 const router = express.Router();
 
 //routing
-
-//Verify Phone Number || POST
+// Upload a new study material (image, video) || POST
 router.post('/create-study', upload, createStudy);
 
-//Verify Phone Number || POST
+// Retrieve all study materials || GET
 router.get('/read-all-study', readAllStudy);
 
-//Verify Phone Number || POST
+// Retrieve study materials with pagination || POST
 router.post('/read-paginate-all-study', readPaginateAllStudy);
 
-//Verify Phone Number || POST
+// Retrieve all public study materials || GET
 router.get('/read-all-public-study', readAllPublicStudy);
 
-//Verify Phone Number || POST
+// Search study materials by keyword || POST
 router.post('/read-keyword-study', readKeywordStudy);
 
-//Verify Phone Number || POST
+// Search study materials by tag || POST
 router.post('/read-tag-study', readTagsStudy);
 
-//Verify Phone Number || POST
+// Retrieve study materials by a list of IDs || POST
 router.post('/read-ids-study', readIDsStudy);
 
-//Verify Phone Number || POST
+// Retrieve a single study material || POST
 router.post('/read-study', readSingleStudy);
 
-//Verify Phone Number || POST
-router.post('/read-study', readSingleStudy);
-
-//Verify Phone Number || POST
-router.post('/read-study-video', readStudyVideo);
-
-//Verify Phone Number || POST
+// Update an existing study material || POST
 router.post('/update-study', upload, updateStudy);
 
-//Verify Phone Number || POST
+// Delete a study material || POST
 router.post('/delete-study', deleteStudy);
 
 export default router;

@@ -16,16 +16,17 @@ const router = express.Router();
 
 //routing
 
-//Verify Phone Number || POST
+// Route to create a new notification || POST
 router.post('/create-notification', createNotification);
 
-//Verify Phone Number || POST
+// Route to read all notifications || GET
 router.get('/read-all-notification', readAllNotification);
 
-//Verify Phone Number || POST
+// Route to read a single notification || POST
 router.post('/read-notification', readSingleNotification);
 
-//Verify Phone Number || POST
+// Route to update a notification || POST
 router.post('/update-notification', updateNotification);
+
 
 export default router;

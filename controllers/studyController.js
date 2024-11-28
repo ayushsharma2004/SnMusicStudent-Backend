@@ -22,31 +22,74 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const bucket = admin.storage().bucket()
 
-//function to create our Studys details
+
 /* 
-    request url = http://localhost:8080/api/v1/study/create-study
-    method = POST
-    FormData: 
-    fields: {
-      "title": "title1",
-      "description": "desc1"
-    }
-    files: { //req.file
-      "video": "video file",
-      "image": "image file for thumbnail"
-    }
-    response: {
-      "success": true,
-      "message": "Study created successfully",
-      "study": {
-        "studyId": "bb9ee1bc-f704-4aa0-a1cb-fbe255e9c5be",
-        "title": "title9",
-        "description": "desc9",
-        "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2Fbb9ee1bc-f704-4aa0-a1cb-fbe255e9c5be%2Fwatermark%2FvidInstrument2.mp4?alt=media&token=7f2bdbf5-22d5-4d04-8415-1c56ffe9e4e4",
-        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2Fbb9ee1bc-f704-4aa0-a1cb-fbe255e9c5be%2Fimage%2Fundefined?alt=media&token=f12e8276-8070-4b82-96d0-fd3334c1abb6",
-        "timestamp": "2024-07-22T16:27:20.343Z"
-      }
-    }
+// Summary: Endpoint for the admin to upload study materials (videos and optional images) for flute classes.
+// Action: POST
+// URL: "http://localhost:8080/api/v1/study/create-study"
+
+// Request:
+// Headers:
+// Content-Type: multipart/form-data
+
+// Body:
+// req.body: {
+//   "title": "Beginner Flute Lesson 1",
+//   "description": "Introduction to flute basics",
+//   "tags": ["Beginner", "Flute", "Basics"],
+//   "isPublic": true,
+//   "link": "https://example.com/existing-video-link" // Optional, alternative to uploading a video
+// }
+// req.files: {
+//   "video": [<Buffer>], // Video file buffer (required if `link` is not provided)
+//   "image": [<Buffer>]  // Image file buffer (optional)
+// }
+
+// Response:
+// Success:
+// {
+//   "success": true,
+//   "message": "Study created successfully",
+//   "study": 
+//     {
+//       "studyId": "4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2",
+//       "title": "Beginner Flute Lesson 1",
+//       "tags": ["flute", "scales", "advanced"],
+//       "description": "Introduction to flute basics",
+//       "imageUrl": null,
+//       "videoUrl": null,
+//       "link": "https://example.com/existing-video-link",
+//       "public": true,
+//       "timestamp": "2024-11-28T14:30:45.000Z"
+//     },
+// }
+
+// Failure:
+// {
+//   "success": false,
+//   "message": "Title, description, and video are required"
+// }
+// OR
+// {
+//   "success": false,
+//   "message": "Study material with the same title already exists"
+// }
+// OR
+// {
+//   "success": false,
+//   "message": "Error in creating study material",
+//   "error": "Detailed error message"
+// }
+
+// Notes:
+// - Admin can either provide a video `link` or upload a video file.
+// - If no image is uploaded, an image frame is extracted from the video.
+// - A watermark ("SN MUSIC") is added to both videos and images before storing.
+// - Files are saved in a structured cloud storage path for efficient access.
+// - A unique `studyId` is generated for each uploaded material.
+// - Tags help in categorizing and searching study materials.
+// - Clears the 'all_study' cache to ensure the latest study materials are available to students.
+// - Students can view and access uploaded videos through their accounts.
 */
 export const createStudy = async (req, res) => {
   try {
@@ -67,8 +110,6 @@ export const createStudy = async (req, res) => {
       return res.status(400).send({ message: 'Study already exists' });
     }
 
-    let imageUrl = null;
-    let videoUrl = null;
     var vidWatermark, vidWatermarkUrl, imgWatermarkUrl;
 
     // Handle video and image processing only if link is not provided
@@ -130,33 +171,64 @@ export const createStudy = async (req, res) => {
   }
 };
 
-//function to read all our Study details
 /* 
-    request url = http://localhost:8080/api/v1/study/read-all-study
-    method = GET
-    response: [
-    {
-      "studyId": "35e5869f-2e88-4880-8ae8-cff13d140ec9",
-      "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33b84a50-8c40-407a-b259-eed837c6b2af%2Fwatermark%2FvidInstrument8.mp4?alt=media&token=62ab1750-63f1-4662-944a-7e5c40366e09",
-      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F35e5869f-2e88-4880-8ae8-cff13d140ec9%2Fimage%2Fframe.jpg?alt=media&token=fcdcb285-db66-4a30-992e-3c2d80a9641b",
-      "description": "desc5",
-      "title": "title5"
-    },
-    {
-      "studyId": "44588c1b-125b-44eb-9179-f6c59d9d7344",
-      "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33b84a50-8c40-407a-b259-eed837c6b2af%2Fwatermark%2FvidInstrument8.mp4?alt=media&token=62ab1750-63f1-4662-944a-7e5c40366e09",
-      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F44588c1b-125b-44eb-9179-f6c59d9d7344%2Fimage%2Fframe.jpg?alt=media&token=ac167b7e-0a3e-49fe-937a-490cd9cefafa",
-      "description": "desc3",
-      "title": "title3"
-    }
-  ]
-*/
+// Summary: Endpoint for retrieving all study materials available in the flute classes.
+// Action: GET
+// URL: "http://localhost:8080/api/v1/study/read-all-study"
 
+// Request:
+// No request body is required for this endpoint.
+
+// Response:
+// Success:
+// {
+//   "success": true,
+//   "message": "Study read successfully",
+//   "study": [
+//     {
+//       "studyId": "4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2",
+//       "title": "Beginner Flute Lesson 1",
+//       "description": "Introduction to flute basics",
+//       "tags": ["flute", "scales", "advanced"],
+//       "imageUrl": null,
+//       "videoUrl": null,
+//       "link": "https://example.com/existing-video-link",
+//       "public": true,
+//       "timestamp": "2024-11-28T14:30:45.000Z"
+//     },
+//     {
+//       "studyId": "4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2",
+//       "title": "Beginner Flute Lesson 1",
+//       "description": "Introduction to flute basics",
+//       "tags": ["flute", "scales", "advanced"],
+//       "imageUrl": "https://storage.example.com/study/4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2/image/frame.jpg",
+//       "videoUrl": "https://storage.example.com/study/4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2/watermark/video.mp4",
+//       "link": null,
+//       "public": false,
+//       "timestamp": "2024-11-28T14:30:45.000Z"
+//     },
+//     ...
+//   ]
+// }
+
+// Failure:
+// {
+//   "success": false,
+//   "message": "Error in reading all study",
+//   "error": "Detailed error message"
+// }
+
+// Notes:
+// - If the Video will have link then video url will be null and vice versa
+// - Retrieves a limited set of fields for all study materials, including `studyId`, `title`, `description`, `imageUrl`, `videoUrl`, `link`, `public`, and `timestamp`.
+// - Data is cached for a duration specified by `CACHE_DURATION` to optimize performance.
+// - Students can view these study materials directly from the response.
+*/
 export const readAllStudy = async (req, res) => {
   try {
     var key = 'all_study'
     // var study = await readAllData(process.env.studyCollection);
-    var study = await readAllLimitData(process.env.studyCollection, ['studyId', 'imageUrl', 'description', 'title', 'videoUrl', 'link', 'public', 'timestamp']);
+    var study = await readAllLimitData(process.env.studyCollection, ['studyId', 'imageUrl', 'description', 'title', 'videoUrl', 'link', 'public', 'timestamp', 'tags']);
 
     console.log("setting data in cache")
     var response = {
@@ -181,6 +253,70 @@ export const readAllStudy = async (req, res) => {
   }
 };
 
+/* 
+// Summary: Endpoint for retrieving paginated study materials for flute classes.
+// Action: POST
+// URL: "http://localhost:8080/api/v1/study/read-paginate-all-study"
+
+// Request:
+// req.body: {
+//   "lastDoc": {
+//     "studyId": "4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2"
+//   },
+//   "pageSize": 10
+// }
+
+// Response:
+// Success:
+// {
+//   "success": true,
+//   "message": "Study read successfully",
+//   "study": [
+//     {
+//       "studyId": "4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2",
+//       "title": "Beginner Flute Lesson 1",
+//       "description": "Introduction to flute basics",
+//       "tags": ["flute", "scales", "advanced"],
+//       "imageUrl": null,
+//       "videoUrl": null,
+//       "link": "https://example.com/existing-video-link",
+//       "public": true,
+//       "timestamp": "2024-11-28T14:30:45.000Z"
+//     },
+//     {
+//       "studyId": "4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2",
+//       "title": "Beginner Flute Lesson 1",
+//       "description": "Introduction to flute basics",
+//       "tags": ["flute", "scales", "advanced"],
+//       "imageUrl": "https://storage.example.com/study/4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2/image/frame.jpg",
+//       "videoUrl": "https://storage.example.com/study/4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2/watermark/video.mp4",
+//       "link": null,
+//       "public": false,
+//       "timestamp": "2024-11-28T14:30:45.000Z"
+//     },
+//     ...
+//   ],
+//   "lastDoc": {
+//    "other firestore fields, study material fields"
+//     "studyId": "7f8d3459-349c-4df8-bf09-93b346b5e8e3"
+//   },
+//   "count": 10
+// }
+
+// Failure:
+// {
+//   "success": false,
+//   "message": "Error in reading all study",
+//   "error": "Detailed error message"
+// }
+
+// Notes:
+// - Supports pagination by passing the `lastDoc` field in the request to fetch the next set of results.
+// - `pageSize` determines the number of study materials fetched per request.
+// - Returns the `lastDoc` for subsequent paginated calls.
+// - Caches the response using `CACHE_DURATION` to optimize repeated queries.
+// - Useful for fetching a manageable set of study materials, especially for large datasets.
+*/
 export const readPaginateAllStudy = async (req, res) => {
   try {
     const { lastDoc, pageSize } = req.body;
@@ -197,7 +333,7 @@ export const readPaginateAllStudy = async (req, res) => {
 
     const study = await readAllLimitPaginate(
       process.env.studyCollection,
-      ['studyId', 'imageUrl', 'description', 'title', 'videoUrl', 'link', 'public', 'timestamp'],
+      ['studyId', 'imageUrl', 'description', 'title', 'videoUrl', 'link', 'public', 'timestamp', 'tags'],
       startAfterDoc, // Pass the correct reference for pagination
       pageSize
     );
@@ -224,6 +360,70 @@ export const readPaginateAllStudy = async (req, res) => {
   }
 };
 
+/* 
+// Summary: Endpoint to retrieve all public study materials for flute classes.
+// Action: GET
+// URL: "http://localhost:8080/api/v1/study/read-all-public"
+
+// Description:
+// - Fetches all study materials marked as public (`public: true`) from the Firestore database.
+// - Utilizes caching to optimize repeated requests, storing data with a key `study_public`.
+// - Maps the fetched documents to extract and structure their data for the response.
+
+// Request:
+// - No parameters or body required for this request.
+
+// Response:
+// Success (201):
+// {
+//   "success": true,
+//   "message": "public study read successfully",
+//   "study": [
+//     {
+//       "studyId": "4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2",
+//       "title": "Beginner Flute Lesson 1",
+//       "description": "Introduction to flute basics",
+//       "tags": ["flute", "scales", "advanced"],
+//       "imageUrl": null,
+//       "videoUrl": null,
+//       "link": "https://example.com/existing-video-link",
+//       "public": true,
+//       "timestamp": "2024-11-28T14:30:45.000Z"
+//     },
+//     {
+//       "studyId": "4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2",
+//       "title": "Beginner Flute Lesson 1",
+//       "description": "Introduction to flute basics",
+//       "tags": ["flute", "scales", "advanced"],
+//       "imageUrl": "https://storage.example.com/study/4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2/image/frame.jpg",
+//       "videoUrl": "https://storage.example.com/study/4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2/watermark/video.mp4",
+//       "link": null,
+//       "public": true,
+//       "timestamp": "2024-11-28T14:30:45.000Z"
+//     },
+//     ...
+//   ]
+// }
+
+// Failure (500):
+// {
+//   "success": false,
+//   "message": "Error in reading all study",
+//   "error": "Detailed error message"
+// }
+
+// Process:
+// 1. Call `matchData` to fetch documents from the `studyCollection` where the `public` field is `true`.
+// 2. Extract document data using the `map` function on the Firestore query snapshot.
+// 3. Cache the response using a key (`study_public`) with a predefined `CACHE_DURATION`.
+// 4. Send a 201 response with the structured study materials data.
+// 5. Handle and log errors, returning a 500 response with error details in case of failures.
+
+// Notes:
+// - The function leverages Firestore's query capabilities for filtering (`matchData` utility).
+// - Caching ensures faster response times for frequently accessed data.
+// - Only documents with the `public` field set to `true` are included in the response.
+*/
 export const readAllPublicStudy = async (req, res) => {
   try {
     var key = 'study_public'
@@ -256,36 +456,61 @@ export const readAllPublicStudy = async (req, res) => {
   }
 };
 
-/*
-  Summary: Funcyion to search study materials by a keyword
-  Action: POST
-  url: "http://localhost:8080/api/v1/study/read-study-keyword"
-  req.body: {
-    "keyword": "tracks"
-  }
-  response: {
-    "success": true,
-    "message": "study read successfully",
-    "study": [
-      {
-        "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fwatermark%2FvidInstrument6.mp4?alt=media&token=fb501109-032b-4051-becf-92dd48167bbd",
-        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fimage%2Fundefined?alt=media&token=873086c0-f8d5-4609-ae9a-59677cb6243c",
-        "description": "desc2",
-        "studyId": "33e93fad-d0e0-4a89-89ae-8f80cac2dd6c",
-        "tags": [
-          "rag",
-          "songs"
-        ],
-        "timestamp": {
-          "_seconds": 1722241643,
-          "_nanoseconds": 921000000
-        },
-        "title": "study title2"
-      }
-    ]
-  }
+/* 
+// Summary: Endpoint for searching study materials based on a keyword for flute classes.
+// Action: POST
+// URL: "http://localhost:8080/api/v1/study/read-keyword-study"
+
+// Request:
+// req.body: {
+//   "keyword": "Beginner Flute"
+// }
+
+// Response:
+// Success:
+// {
+//   "success": true,
+//   "message": "study read successfully",
+//   "study": [
+//     {
+//       "studyId": "4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2",
+//       "title": "Beginner Flute Lesson 1",
+//       "description": "Introduction to flute basics",
+//       "tags": ["flute", "scales", "advanced"],
+//       "imageUrl": null,
+//       "videoUrl": null,
+//       "link": "https://example.com/existing-video-link",
+//       "public": true,
+//       "timestamp": "2024-11-28T14:30:45.000Z"
+//     },
+//     {
+//       "studyId": "4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2",
+//       "title": "Beginner Flute Lesson 2",
+//       "description": "Introduction to flute basics",
+//       "tags": ["flute", "scales", "advanced"],
+//       "imageUrl": "https://storage.example.com/study/4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2/image/frame.jpg",
+//       "videoUrl": "https://storage.example.com/study/4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2/watermark/video.mp4",
+//       "link": null,
+//       "public": false,
+//       "timestamp": "2024-11-28T14:30:45.000Z"
+//     },
+//     ...
+//   ]
+// }
+
+// Failure:
+// {
+//   "success": false,
+//   "message": "Error in reading study",
+//   "error": "Detailed error message"
+// }
+
+// Notes:
+// - Requires a `keyword` in the request body to search for study materials.
+// - Searches in `title`, `description`, and `tags` fields of the study materials.
+// - Returns study materials matching the keyword, including metadata such as `studyId`, URLs, and tags.
+// - Uses the `searchByKeyword` utility function for querying the database.
 */
-// search study material by keyword
 export const readKeywordStudy = async (req, res) => {
   try {
     const { keyword } = req.body;
@@ -313,51 +538,72 @@ export const readKeywordStudy = async (req, res) => {
 };
 
 /*
-  Summary: Funcyion to search study materials by a tags and keyword (optional)
-  Action: POST
-  url: "http://localhost:8080/api/v1/study/read-tag-study"
-  req.body: {
-    "keyword": "songs", (optional)
-    "tag": ["songs", "spiritual"]
-  }
-  response: {
-    "success": true,
-    "message": "study read successfully",
-    "study": [
-      {
-        "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fwatermark%2FvidInstrument6.mp4?alt=media&token=fb501109-032b-4051-becf-92dd48167bbd",
-        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F33e93fad-d0e0-4a89-89ae-8f80cac2dd6c%2Fimage%2Fundefined?alt=media&token=873086c0-f8d5-4609-ae9a-59677cb6243c",
-        "description": "desc2",
-        "studyId": "33e93fad-d0e0-4a89-89ae-8f80cac2dd6c",
-        "tags": [
-          "rag",
-          "songs"
-        ],
-        "timestamp": {
-          "_seconds": 1722241643,
-          "_nanoseconds": 921000000
-        },
-        "title": "study title2"
-      },
-      {
-        "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2Fc2090832-69d6-4d18-ac09-8375149966da%2Fwatermark%2FvidInstrument7.mp4?alt=media&token=6420eeed-8789-49a0-abe1-a44a717514b0",
-        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2Fc2090832-69d6-4d18-ac09-8375149966da%2Fimage%2Fundefined?alt=media&token=0d028104-4b2f-498d-9d7f-23404d3bc6c3",
-        "description": "desc3",
-        "studyId": "c2090832-69d6-4d18-ac09-8375149966da",
-        "tags": [
-          "spiritual",
-          "tracks"
-        ],
-        "timestamp": {
-          "_seconds": 1722241717,
-          "_nanoseconds": 667000000
-        },
-        "title": "study title3"
-      }
-    ]
-  }
+// Summary: Endpoint to retrieve study materials based on tags and optional keywords for flute classes.
+// Action: POST
+// URL: "http://localhost:8080/api/v1/study/read-tags"
+
+// Description:
+// - This function allows fetching study materials based on specific tags and an optional keyword.
+// - Uses the `searchByTag` helper function to query the Firestore database for documents that match the specified criteria.
+
+// Request Body:
+// {
+//   "keyword": "scales",
+//   "tag": ["flute", "advanced"]
+// }
+
+// Response:
+// Success (201):
+// {
+//   "success": true,
+//   "message": "study read successfully",
+//   "study": [
+//     {
+//       "studyId": "4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2",
+//       "title": "Beginner Flute Lesson 1",
+//       "description": "Introduction to flute basics",
+//       "tags": ["flute", "scales", "advanced"],
+//       "imageUrl": null,
+//       "videoUrl": null,
+//       "link": "https://example.com/existing-video-link",
+//       "public": true,
+//       "timestamp": "2024-11-28T14:30:45.000Z"
+//     },
+//     {
+//       "studyId": "4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2",
+//       "title": "Beginner Flute Lesson 2",
+//       "description": "Introduction to flute basics",
+//       "tags": ["flute", "scales", "advanced"],
+//       "imageUrl": "https://storage.example.com/study/4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2/image/frame.jpg",
+//       "videoUrl": "https://storage.example.com/study/4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2/watermark/video.mp4",
+//       "link": null,
+//       "public": false,
+//       "timestamp": "2024-11-28T14:30:45.000Z"
+//     },
+//     ...
+//   ]
+// }
+
+// Failure (500):
+// {
+//   "success": false,
+//   "message": "Error in reading study",
+//   "error": "Detailed error message"
+// }
+
+// Process:
+// 1. Validate if the required `tag` field is present in the request body.
+//    - If `tag` is missing, respond with a 400 error.
+// 2. If the optional `keyword` is missing, set it to `false` to skip keyword filtering.
+// 3. Call the `searchByTag` helper function to query the database.
+//    - Pass the collection name, keyword, and tags to the function.
+// 4. Return the results with a 201 status code if the query is successful.
+// 5. Log errors and respond with a 500 status code if any issues occur.
+
+// Notes:
+// - The `searchByTag` function handles case-insensitive matching for keywords and tag validation.
+// - Useful for targeted searches in the study materials database, such as finding advanced flute lessons.
 */
-//
 export const readTagsStudy = async (req, res) => {
   try {
     var { keyword, tag } = req.body;
@@ -388,50 +634,58 @@ export const readTagsStudy = async (req, res) => {
 };
 
 /*
-  Summary: Funcyion to search study materials by a keyword
-  Action: POST
-  url: "http://localhost:8080/api/v1/study/read-tag-study"
-  req.body: {
-    "ids": ["c2090832-69d6-4d18-ac09-8375149966da", "553ed00c-36e7-4a7c-bc7a-a021092fb1e2"]
-  }
-  response: {
-  "success": true,
-  "message": "study read successfully",
-  "study": [
-    {
-      "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F553ed00c-36e7-4a7c-bc7a-a021092fb1e2%2Fwatermark%2FvidInstrument5.mp4?alt=media&token=2ce4ba8e-74fa-4552-99db-46aa14db7d47",
-      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F553ed00c-36e7-4a7c-bc7a-a021092fb1e2%2Fimage%2Fundefined?alt=media&token=2a815476-0b56-44f1-9cf1-6807770c9dd4",
-      "description": "desc1",
-      "studyId": "553ed00c-36e7-4a7c-bc7a-a021092fb1e2",
-      "tags": [
-        "rag",
-        "tracks"
-      ],
-      "timestamp": {
-        "_seconds": 1722241543,
-        "_nanoseconds": 342000000
-      },
-      "title": "study title1"
-    },
-    {
-      "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2Fc2090832-69d6-4d18-ac09-8375149966da%2Fwatermark%2FvidInstrument7.mp4?alt=media&token=6420eeed-8789-49a0-abe1-a44a717514b0",
-      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2Fc2090832-69d6-4d18-ac09-8375149966da%2Fimage%2Fundefined?alt=media&token=0d028104-4b2f-498d-9d7f-23404d3bc6c3",
-      "description": "desc3",
-      "studyId": "c2090832-69d6-4d18-ac09-8375149966da",
-      "tags": [
-        "spiritual",
-        "tracks"
-      ],
-      "timestamp": {
-        "_seconds": 1722241717,
-        "_nanoseconds": 667000000
-      },
-      "title": "study title3"
-    }
-  ]
-}
+// Summary: Endpoint to retrieve study materials based on provided study IDs.
+// Action: POST
+// URL: "http://localhost:8080/api/v1/study/read-ids"
+
+// Description:
+// - This function fetches study materials from the Firestore database based on an array of provided study IDs.
+// - Allows optional customization of the maximum number of documents to return via the `limit` field.
+// - Utilizes the `searchByIDs` helper function to perform the database query and matching logic.
+
+// Request Body:
+// {
+//   "ids": ["id1", "id2", "id3"],
+//   "limit": 10
+// }
+
+// Response:
+// Success (201):
+// {
+//   "success": true,
+//   "message": "study read successfully",
+//   "study": [
+//     {
+//       "studyId": "id1",
+//       "title": "Introduction to Algorithms",
+//       "description": "A comprehensive guide to algorithms.",
+//       ...
+//     },
+//     ...
+//   ]
+// }
+
+// Failure (500):
+// {
+//   "success": false,
+//   "message": "Error in reading study",
+//   "error": "Detailed error message"
+// }
+
+// Process:
+// 1. Extract `ids` (array of study IDs) and `limit` (maximum number of results) from the request body.
+//    - Set a default `limit` of 20 if not provided.
+// 2. Validate the presence of the required `ids` field.
+//    - If `ids` is missing, respond with a 400 status code and error message.
+// 3. Use the `searchByIDs` helper function to query the database for matching study materials.
+//    - Pass the collection name, `ids`, and `limit` to the helper function.
+// 4. Return the results with a 201 status code if the query is successful.
+// 5. Log any errors and respond with a 500 status code in case of issues.
+
+// Notes:
+// - The `searchByIDs` function efficiently matches documents based on their unique `studyId` field.
+// - Ideal for scenarios where study materials need to be retrieved by their specific IDs, such as user-saved items.
 */
-// Getting all study items from user doc study field  
 export const readIDsStudy = async (req, res) => {
   try {
     var { ids, limit } = req.body;
@@ -463,64 +717,56 @@ export const readIDsStudy = async (req, res) => {
   }
 };
 
-//function to read single videoUrl of our Study details
-/* 
-    request url = http://localhost:8080/api/v1/study/read-study-video
-    method = POST
-    {
-      "studyId": "jjhjhjsagsa" //your doc id
-    }
-    response: {
-      "success": true,
-      "message": "study video read successfully",
-      "study": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2Fa7c59a85-9090-43d5-b974-36f38ce23197%2Fwatermark%2FvidInstrument2.mp4?alt=media&token=365595af-367a-4fa7-91f5-047044c3c453"
-    }
-*/
+/*
+// Summary: Endpoint to retrieve a single flute study material based on the provided study ID.
+// Action: POST
+// URL: "http://localhost:8080/api/v1/study/read-single"
 
-export const readStudyVideo = async (req, res) => {
-  try {
-    const { studyId } = req.body;
-    if (!studyId) {
-      return res.status(400).send({ message: 'Study id is required' });
-    }
-    // var study = await readAllData(process.env.studyCollection);
-    var study = await readFieldData(process.env.studyCollection, studyId, 'videoUrl');
-    console.log(study);
+// Description:
+// - This endpoint retrieves a single study material based on the provided study ID.
+// - Utilizes the `readSingleData` helper function to query the Firestore database and fetch the document matching the provided `studyId`.
 
-    return res.status(201).send({
-      success: true,
-      message: 'study video read successfully',
-      study: study
-    });
-  } catch (error) {
-    console.error('Error in reading all study:', error);
-    return res.status(500).send({
-      success: false,
-      message: 'Error in reading all study',
-      error: error.message,
-    });
-  }
-};
+// Request Body:
+// {
+//   "studyId": "4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2"
+// }
 
+// Response:
+// Success (201):
+// {
+//   "success": true,
+//   "message": "study read successfully",
+//   "study": {
+//     "studyId": "4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2",
+//     "title": "Beginner Flute Lesson 1",
+//     "description": "Introduction to flute basics",
+//     "tags": ["flute", "scales", "advanced"],
+//     "imageUrl": null,
+//     "videoUrl": null,
+//     "link": "https://example.com/existing-video-link",
+//     "public": true,
+//     "timestamp": "2024-11-28T14:30:45.000Z"
+//   }
+// }
 
-//function to read single document of our Study details
-/* 
-    request url = http://localhost:8080/api/v1/study/read-study
-    method = POST
-    {
-      "studyId": "jjhjhjsagsa" //your doc id
-    }
-      response: {
-        "success": true,
-        "message": "Study read successfully",
-        "student": {
-          "studentId": "0cfc8500-8ebd-44ac-b2f8-f46e712e24ed",
-          "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2Fviddemo1.mp4?alt=media&token=c1a87355-2d6e-49f5-b87c-8d67eaf0784b",
-          "description": "gjygkjhjk",
-          "title": "title2",
-          "imageUrl": "hgjhghj.com"
-        }
-      }
+// Failure (500):
+// {
+//   "success": false,
+//   "message": "Error in reading study",
+//   "error": "Detailed error message"
+// }
+
+// Process:
+// 1. Extract the `studyId` from the request body.
+//    - Respond with a 400 status code if `studyId` is missing.
+// 2. Use the `readSingleData` helper function to query the database for the study material.
+//    - Pass the collection name and `studyId` to the function.
+// 3. Return the retrieved study material with a 201 status code if successful.
+// 4. Log errors and respond with a 500 status code in case of issues.
+
+// Notes:
+// - The `readSingleData` function handles fetching a single document based on the provided `studyId`.
+// - This endpoint is useful for retrieving detailed information about a specific flute study lesson.
 */
 export const readSingleStudy = async (req, res) => {
   try {
@@ -548,46 +794,92 @@ export const readSingleStudy = async (req, res) => {
   }
 };
 
-//function to update single our Study details
-/* 
-    request url = http://localhost:8080/api/v1/study/update-study
-    method = POST
-    FormData: 
-    fields: {
-      "studyId": "studyId"
-      "title": "title1",
-      "description": "desc1"
-    }
-    files: { //req.files
-      "video": "video file",
-      "image": "image file"
-    }
-    response: {
-      "success": true,
-      "message": "Student updated successfully",
-      "study": {
-        "description": "desc1_jhjhkhhkjhhkjjhjhkhkjkh",
-        "imageUrl": "hgjhghj.com"
-        "videoUrl": "https://firebasestorage.googleapis.com/v0/b/snmusic-ca00f.appspot.com/o/study%2F6638b142-4a0c-4eb8-8ed3-128ec3665e58%2Fviddemo4.mp4?alt=media&token=726d4053-bb5a-48a8-a1a9-b91764cdfb53"
-      }
-    }
+/*
+// Summary: Endpoint to update details of a specific flute study material.
+// Action: PUT
+// URL: "http://localhost:8080/api/v1/study/update"
+
+// Description:
+// - This endpoint allows updating the details of a specific study material based on the provided `studyId`.
+// - It supports updating the title, description, and optional image/video files with a watermark.
+// - The `updateStudy` function processes the provided fields and files, applies watermarks to the video/image, and stores the updated data in the Firestore collection.
+
+// Request Body:
+// {
+//   "studyId": "4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2",
+//   "title": "Updated Flute Lesson 1",
+//   "description": "New introduction to flute basics",
+//   "image": "imageFile",
+//   "video": "videoFile"
+// }
+
+// Response:
+// Success (201):
+// {
+//   "success": true,
+//   "message": "Study updated successfully",
+//   "study": {
+//     "studyId": "4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2",
+//     "title": "Updated Flute Lesson 1",
+//     "description": "New introduction to flute basics",
+//     "link": null,
+//     "imageUrl": "https://storage.example.com/study/4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2/image/watermarked.jpg",
+//     "videoUrl": "https://storage.example.com/study/4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2/video/watermarked.mp4",
+//     "timestamp": "2024-11-28T14:30:45.000Z"
+//   }
+// }
+
+// Failure (400):
+// {
+//   "success": false,
+//   "message": "Title, description, and video are required"
+// }
+
+// Failure (404):
+// {
+//   "success": false,
+//   "message": "Study not found"
+// }
+
+// Failure (500):
+// {
+//   "success": false,
+//   "message": "Error in updating study",
+//   "error": "Detailed error message"
+// }
+
+// Process:
+// 1. Validate that the required `studyId`, `title`, and `description` are provided in the request body.
+// 2. If the study does not exist in the database, return a 404 error.
+// 3. Check if files (video and/or image) are provided.
+// 4. Apply watermark to the video and/or image files if present.
+// 5. Upload the watermarked video/image to the storage and update the corresponding URLs.
+// 6. Update the study record in the Firestore database with the new data.
+// 7. Clear the cache for all study materials to ensure the updated data is reflected.
+// 8. Respond with a success message and the updated study data.
+// 9. Log errors and respond with a 500 status code if any issues occur.
+
+// Notes:
+// - The `addTextWatermarkToImage` and `addTextWatermarkToVideo` functions are used to apply the watermark text ("SN MUSIC") to images and videos.
+// - The `uploadFile` and `uploadWaterMarkFile` functions handle uploading the files to the storage system.
 */
 export const updateStudy = async (req, res) => {
   try {
-    const { studyId, title, description } = req.body;
+    const { studyId, title, description, link } = req.body;
     const files = req.files;
 
     // Create the updates object only with provided fields
     const updates = {};
     if (title) updates.title = title;
     if (description) updates.description = description;
+    if (link) updates.link = link;
     const watermarkPath = "../../SNmusicAdmin/admin/src/images/watermark2.png";
 
     if (!studyId) {
       return res.status(400).send({ message: 'Error finding study' });
     }
 
-    if (!title && !description && !files) {
+    if (!title && !description && !link && !files) {
       return res.status(400).send({ message: 'Title, description, and video are required' });
     }
 
@@ -621,6 +913,7 @@ export const updateStudy = async (req, res) => {
     const student = await updateData(process.env.studyCollection, studyId, updates)
     console.log('success');
     cache.del('all_study');
+    updates.studyId = studyId;
 
     res.status(201).send({
       success: true,
@@ -637,24 +930,58 @@ export const updateStudy = async (req, res) => {
   }
 };
 
-//function to delete single our Study details
 /* 
-    request url = http://localhost:8080/api/v1/study/delete-study
-    method = POST
-    req.body: 
-    {
-      "studyId": "studyId"
-    }
-    response: {
-      "success": true,
-      "message": "study deleted successfully",
-      "study": {
-        "_writeTime": {
-          "_seconds": 1721336310,
-          "_nanoseconds": 790740000
-        }
-      }
-    }
+// Summary: Endpoint to delete a study material based on studyId.
+// Action: DELETE
+// URL: "http://localhost:8080/api/v1/study/delete"
+
+// Description:
+// - Deletes a specific study material from the Firestore database based on the provided `studyId`.
+// - Validates that the study exists before attempting to delete it.
+// - Removes any cached data related to the study using the cache key `all_study`.
+// - Sends a success response if the deletion is successful, or an error response if not.
+
+// Request:
+// - Body: A JSON object containing the `studyId` of the study material to be deleted.
+// {
+//   "studyId": "4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2"
+// }
+
+// Response:
+// Success (201):
+// {
+//   "success": true,
+//   "message": "study deleted successfully",
+//   "study": {
+//     "studyId": "4d21f9b1-2c4d-483e-9bf7-9b8ab3b743b2",
+//     "title": "Beginner Flute Lesson 1",
+//     "description": "Introduction to flute basics",
+//     "tags": ["flute", "scales", "advanced"],
+//     "public": true,
+//     "timestamp": "2024-11-28T14:30:45.000Z"
+//   }
+// }
+
+// Failure (500):
+// {
+//   "success": false,
+//   "message": "Error in deleting study",
+//   "error": "Detailed error message"
+// }
+
+// Process:
+// 1. Check if the `studyId` is provided in the request body.
+// 2. Validate if the study with the given `studyId` exists in the Firestore database.
+// 3. If the study exists, delete it from the database using `deleteData` function.
+// 4. Clear the `all_study` cache to ensure the deleted study is not included in subsequent requests.
+// 5. Send a success response with the deleted study's data.
+// 6. If validation fails or the study does not exist, send an error response with a relevant message.
+// 7. Handle and log any errors that occur during the process, sending a 500 response in case of failure.
+
+// Notes:
+// - The `studyId` is required to identify which study to delete.
+// - The cache is cleared after each deletion to ensure data consistency across requests.
+// - Error handling is in place to return detailed error messages in case of failure.
 */
 export const deleteStudy = async (req, res) => {
   try {

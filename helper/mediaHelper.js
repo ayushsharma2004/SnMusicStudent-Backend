@@ -39,7 +39,7 @@ export const uploadFile = (file, type, folderPath) => {
   return new Promise((resolve, reject) => {
     const storageRef = ref(storage, `${process.env.storagePath}/${folderPath}`);
     const metadata = {
-      contentType: type === 'images' ? 'image/jpeg' : 'video/mp4',
+      contentType: type === 'images' || 'image' ? 'image/jpeg' : 'video/mp4',
     };
     const uploadTask = uploadBytesResumable(storageRef, file.buffer, metadata);
 
