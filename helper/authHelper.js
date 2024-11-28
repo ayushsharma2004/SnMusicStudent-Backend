@@ -1,7 +1,9 @@
 import bcrypt from 'bcrypt';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+import JWT from 'jsonwebtoken';
 import { createData, matchData, readSingleData, updateData, updateMatchData } from '../DB/crumd.js';
+import { token } from 'morgan';
 
 // Configure Nodemailer transport
 const transporter = nodemailer.createTransport({
@@ -69,7 +71,7 @@ export const verifyOtp = async (email, otp) => {
     }
 
     var otpRef = await matchData(process.env.userCollection, 'email', email);
-    
+
     var otpData = otpRef.docs[0].data()
 
     if (!otpData) {
@@ -108,3 +110,54 @@ export const hashPassword = async (password) => {
 export const comparePassword = async (password, hashedPassword) => {
   return bcrypt.compare(password, hashedPassword);
 };
+
+export const renewToken = async (refreshToken) => {
+  try {
+    const userId = JWT.verify(refreshToken, process.env.JWT_token).userId
+    const docRef = db.collection(process.env.userCollection).doc(userId)
+    const doc = await docRef.get()
+    const userData = doc.data()
+
+    const user = {
+      userId: userData.userId,
+      name: userData.name,
+      email: userData.email,
+      phone: userData.phone,
+      address: userData.address,
+      study: userData.study,
+      blocked: userData.blocked,
+      role: userData.role
+    }
+
+    const newAccessToken = JWT.sign(
+      {
+        user
+      },
+      process.env.JWT_token,
+      {
+        expiresIn: `${process.env.accessTokenExpiry}d`,
+      }
+    );
+
+    const newRefreshToken = JWT.sign(
+      {
+        userId: userData.userId,
+      },
+      process.env.JWT_token,
+      {
+        expiresIn: `${process.env.refreshTokenExpiry}d`,
+      }
+    )
+
+    await docRef.update({
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken
+    })
+
+    return (newAccessToken, newRefreshToken)
+
+  } catch (error) {
+    console.error(error)
+    throw new Error("error occured at renew token")
+  }
+}

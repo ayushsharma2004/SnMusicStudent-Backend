@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import { createStudy, deleteStudy, readAllPublicStudy, readAllStudy, readIDsStudy, readKeywordStudy, readPaginateAllStudy, readSingleStudy, readTagsStudy, updateStudy } from '../controllers/studyController.js';
+import { verifyToken } from '../middleware/authMiddleware.js';
 
 // Configure multer for file uploads
 const upload = multer({
@@ -19,7 +20,7 @@ const router = express.Router();
 router.post('/create-study', upload, createStudy);
 
 // Retrieve all study materials || GET
-router.get('/read-all-study', readAllStudy);
+router.get('/read-all-study', verifyToken, readAllStudy);
 
 // Retrieve study materials with pagination || POST
 router.post('/read-paginate-all-study', readPaginateAllStudy);

@@ -279,49 +279,73 @@ export const loginController = async (req, res) => {
       });
     }
 
-    // Generate JWT token
-    const token = await JWT.sign(
+    //token
+    const user = {
+      userId: userData.userId,
+      name: userData.name,
+      email: userData.email,
+      phone: userData.phone,
+      address: userData.address,
+      study: userData.study,
+      blocked: userData.blocked,
+      role: userData.role
+    }
+
+    const accessToken = JWT.sign(
       {
-        user: {
-          userId: userData.userId,
-          fname: userData.fname,
-          lname: userData.lname,
-          email: userData.email,
-          phone: userData.phone,
-          address: userData.address,
-          study: userData.study,
-          blocked: userData.blocked,
-          role: userData.role,
-        },
+        user
       },
       process.env.JWT_token,
-      { expiresIn: '7d' }
+      {
+        expiresIn: `${process.env.accessTokenExpiry}d`,
+      }
     );
 
-    // Set token in cookies
-    res.cookie("accessToken", token, {
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    const refreshToken = JWT.sign(
+      {
+        userId: userData.userId,
+      },
+      process.env.JWT_token,
+      {
+        expiresIn: `${process.env.refreshTokenExpiry}d`,
+      }
+    )
+    console.log(refreshToken)
+
+    await db.collection(process.env.userCollection).doc(user.userId).update({
+      accessToken,
+      refreshToken
+    })
+
+    res.cookie("accessToken", accessToken, {
+      maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      // secure: false, // Set to true if using HTTPS
+      // sameSite: "None"
     });
 
-    // Send response
-    return res.status(200).send({
+    res.cookie("refreshToken", refreshToken, {
+      maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      // secure: false, // Set to true if using HTTPS
+      // sameSite: "None"
+    });
+
+    res.status(200).send({
       success: true,
-      message: 'Login successfully',
+      message: "User login successful",
       user: {
-        userId: userData.userId,
-        fname: userData.fname,
-        lname: userData.lname,
+        name: userData.name,
         email: userData.email,
         phone: userData.phone,
         address: userData.address,
         study: userData.study,
         blocked: userData.blocked,
-        role: userData.role,
-      },
-      token,
-    });
+        role: userData.role
+      }
+    }
+    );
+    console.log("success")
   } catch (error) {
     console.error('Error in login:', error);
     return res.status(500).send({
@@ -332,33 +356,21 @@ export const loginController = async (req, res) => {
   }
 };
 
-/*
-Summary: Function used for sending OTP to an email address
-Action: POST
-URL: "http://localhost:8080/api/v1/auth/send-mail"
+// Summary: Function used for sending otp to email address
+// Action: POST
+// url: "http://localhost:8080/api/v1/auth/send-mail"
+// req.body: {
+//   "email": "ayush.s.sharma04@gmail.com"
+// } 
+// response: {
+//   "success": true,
+//   "message": "OTP sent to email"
+// }
 
-Request:
-req.body: {
-  "email": "ayush.s.sharma04@gmail.com"
-}
+//verify token
 
-Response:
-Success:
-{
-  "success": true,
-  "message": "OTP sent to email"
-}
-Failure:
-{
-  "success": false,
-  "message": "Failed to send OTP. Please try again."
-}
-OR
-{
-  "success": false,
-  "message": "Email is required"
-}
-*/
+
+// Send Mail
 export const sendMail = async (req, res) => {
   try {
     const { email } = req.body;

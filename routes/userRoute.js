@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import { readAllUser, readAllUserAlert, readIdentityUser, readLimitedUserStudy, readSingleUser, readSingleUserStudy, readUserStudy, readUserUnapprovedStudy } from '../controllers/userController.js';
+import { verifyToken } from '../middleware/authMiddleware.js';
 
 // Configure multer for file uploads
 const upload = multer({

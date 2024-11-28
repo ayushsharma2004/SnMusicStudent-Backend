@@ -21,15 +21,17 @@ const app = express();
 
 //middlewares
 app.use(cors({
-  origin: "http://localhost:5174", // Frontend domain
+  origin: "http://localhost:5173", // Frontend domain
   credentials: true,
 }
 ));
-app.use(cookieParser())
+
+
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.json());
-app.use(morgan('combined'));
+// app.use(morgan('combined'));
+app.use(cookieParser())
 // Custom middleware to log request duration
 app.use((req, res, next) => {
   const start = Date.now();

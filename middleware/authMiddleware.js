@@ -1,5 +1,7 @@
 import JWT from 'jsonwebtoken';
 import { db } from '../DB/firestore.js';
+import { refreshToken } from 'firebase-admin/app';
+import { renewToken } from '../helper/authHelper.js';
 
 export const requireSignIn = async (req, res, next) => {
   try {
@@ -49,3 +51,74 @@ export const isStudent = async (req, res, next) => {
     return res.status(400).send("Userid is not provided")
   }
 };
+
+//verify token
+export const verifyToken = async (req, res, next) => {
+  try {
+    console.log(req.cookies)
+    const accessToken = req.cookies['accessToken']
+    const refreshToken = req.cookies['refreshToken']
+    console.log("accesstoken:", accessToken, "\n refreshToken:", refreshToken)
+
+    if (!accessToken || !refreshToken) {
+      return res.status(401).send({ success: false, message: "access or refresh token is not present" })
+    }
+
+    const querySnapshot = await db.collection(process.env.userCollection) // replace with your collection name
+      .where('accessToken', '==', accessToken)
+      .limit(1)
+      .get();
+
+    if (querySnapshot.empty) {
+      console.log("No matching documents.");
+      return res.status(401).send({
+        success: false,
+        message: "token has been changed"
+      })
+    }
+
+
+    const document = querySnapshot.docs[0];
+    console.log('Document data:', document.data());
+    const actUserData = document.data();
+    if (actUserData.refreshToken === refreshToken) {
+      const userData = JWT.verify(accessToken, process.env.JWT_token)
+      if (userData) {
+        req.userId = userData.userId
+        return next()
+      }
+    }
+    return res.status(401).send({ success: false, loginRequired: true, message: "Refresh token is changed" })
+
+  } catch (error) {
+    console.log(error)
+    if (error.name === 'TokenExpiredError') {
+      try {
+        const refreshToken = req.cookies['refreshToken']
+        const verifiedRefreshToken = JWT.verify(refreshToken, process.env.JWT_token)
+        if (verifiedRefreshToken) {
+          const { newAccessToken, newRefreshToken } = await renewToken(refreshToken)
+          res.cookie("accessToken", newAccessToken, {
+            maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
+            httpOnly: true,
+
+          });
+
+          res.cookie("refreshToken", newRefreshToken, {
+            maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
+            httpOnly: true,
+
+          });
+          next()
+        }
+      } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+          res.status(401).send({ success: false, loginRequired: true, message: "Both tokens are expired" })
+        }
+      }
+    } else if (error.name === 'JsonWebTokenError') {
+      return res.status(401).send("Invalid token");
+    }
+    res.status(500).send("Internal error occured")
+  }
+}
