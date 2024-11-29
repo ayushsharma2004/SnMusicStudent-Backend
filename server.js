@@ -20,7 +20,7 @@ dotenv.config();
 const app = express();
 
 //middlewares
-const allowedOrigins = ["http://localhost:5173", "https://sn-music-student-frontend.vercel.app/"];
+const allowedOrigins = ["http://localhost:5173", "https://sn-music-student-frontend.vercel.app"];
 
 // CORS middleware
 app.use(cors({
