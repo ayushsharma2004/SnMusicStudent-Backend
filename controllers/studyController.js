@@ -93,7 +93,7 @@ const bucket = admin.storage().bucket()
 */
 export const createStudy = async (req, res) => {
   try {
-    const { title, description, tags, isPublic, link } = req.body;
+    const { title, description, categories, tags, isPublic, link } = req.body;
     const files = req?.files;
     const studyId = uuidv4();
 
@@ -147,6 +147,7 @@ export const createStudy = async (req, res) => {
       videoUrl: vidWatermarkUrl || null, // Ensure this is either null or a valid URL
       imageUrl: imgWatermarkUrl || null, // Ensure this is either null or a valid URL
       link: link || null, // Set link to null if it's not provided
+      categories: categories || [], // Ensure categories are an array
       tags: tags || [], // Ensure tags are an array
       public: isPublic || false, // Ensure isPublic is a boolean
       timestamp: time,
