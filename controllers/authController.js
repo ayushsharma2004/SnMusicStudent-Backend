@@ -1,5 +1,5 @@
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
-import { createSubData, matchData, readSingleData, updateData, updateMatchData } from '../DB/crumd.js';
+import { createSubData, matchData, readSingleData, readSingleSubData, updateData, updateMatchData, updateSubData } from '../DB/crumd.js';
 import { admin, db } from '../DB/firestore.js';
 import { comparePassword, hashPassword, sendOtpToEmail, verifyOtp } from '../helper/authHelper.js';
 import JWT from 'jsonwebtoken';
@@ -792,6 +792,23 @@ export const blockUser = async (req, res) => {
     });
   }
 };
+
+export const allowUser = async (req, res) => {
+  const { notification_id } = req.body
+  try {
+    const notificationData = await readSingleSubData(process.env.adminCollection, process.env.notificationCollection, "admin_profile", notification_id)
+    if (notificationData.allowed) {
+      return res.status(400).send("User is already allowed")
+    }
+    const userId = notificationData.userId
+    await updateSubData(process.env.adminCollection, process.env.notificationCollection, "admin_profile", notification_id, { allowed: true })
+    await updateData(process.env.userCollection, userId, { allowed: true })
+    return res.status(200).send("User is allowed to use the platform")
+  } catch (error) {
+    console.error(error)
+    res.status(500).send("Internal server error")
+  }
+}
 
 export const testController = (req, res) => {
   res.send('Protected Routes');
