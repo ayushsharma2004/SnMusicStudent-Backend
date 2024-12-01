@@ -44,10 +44,10 @@ export const createSubData = async (firstCollectionName, secondCollectionName, i
   try {
     // Create a reference to the nested collection
     const collectionRef = db.collection(firstCollectionName).doc(id1);
-
+    console.log(`${firstCollectionName}.${secondCollectionName}.${id1}.${String(id2)}`)
     // If initialDoc is provided, add it to the nested collection
     if (data) {
-      await collectionRef.collection(secondCollectionName).doc(id2).set(data);
+      await collectionRef.collection(secondCollectionName).doc(id2.toString()).set(data);
     }
 
     return data;
