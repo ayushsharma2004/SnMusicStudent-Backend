@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import JWT from 'jsonwebtoken';
 import { createData, matchData, readSingleData, updateData, updateMatchData } from '../DB/crumd.js';
 import { token } from 'morgan';
+import { db } from '../DB/firestore.js';
 
 // Configure Nodemailer transport
 const transporter = nodemailer.createTransport({
@@ -35,7 +36,7 @@ export const sendOtpToEmail = async (email) => {
     }
 
 
-    const otpRef = updateMatchData(process.env.userCollection, 'email', email, otpJson)
+    const otpRef = await updateMatchData(process.env.userCollection, 'email', email, otpJson)
 
     // Send OTP to the user's email
     const mailOptions = {
@@ -58,22 +59,16 @@ export const sendOtpToEmail = async (email) => {
 // Verify OTP
 export const verifyOtp = async (email, otp) => {
   try {
-    // Validate email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const otpRegex = /^\d{6}$/;
+    console.log(email)
 
-    if (!email || !emailRegex.test(email)) {
-      return res.status(400).send({ message: 'Valid email is required' });
-    }
+    const querySnapshot = await db
+      .collection(process.env.userCollection)
+      .where("email", '==', email)
+      .get();
 
-    if (!otp || !otpRegex.test(otp)) {
-      return res.status(400).send({ message: 'Valid otp is required' });
-    }
+    const otpData = querySnapshot.docs[0].data()
 
-    var otpRef = await matchData(process.env.userCollection, 'email', email);
-
-    var otpData = otpRef.docs[0].data()
-
+    console.log(otpData)
     if (!otpData) {
       throw new Error('OTP not found');
     }

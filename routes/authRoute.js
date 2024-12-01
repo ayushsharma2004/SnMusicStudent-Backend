@@ -14,11 +14,12 @@ import multer, { memoryStorage } from 'multer';
 
 // Configure multer for file uploads
 const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 }, // 10MB file size limit
-}).fields([
-  { name: 'image', maxCount: 1 }
-]);
+  storage: multer.memoryStorage(), // Store files in memory (not on disk)
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB file size limit
+  },
+});
+
 
 
 //route object
@@ -27,7 +28,7 @@ const router = express.Router();
 //routing
 
 // Register a new user || POST
-router.post('/register-user', upload, registerController);
+router.post('/register-user', upload.single('file'), registerController);
 
 // Log in an existing user || POST
 router.post('/login-user', loginController);
@@ -39,7 +40,7 @@ router.post("/send-mail", sendMail);
 router.post("/verify-mail", verifyMail);
 
 // Update user password || POST
-router.post("/forgot-password", upload, forgotPasswordController);
+router.post("/forgot-password", forgotPasswordController);
 
 // Update user details || POST
 router.post("/update-user", updateUserController);

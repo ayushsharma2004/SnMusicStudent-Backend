@@ -1,5 +1,5 @@
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
-import { matchData, readSingleData, updateData, updateMatchData } from '../DB/crumd.js';
+import { createSubData, matchData, readSingleData, updateData, updateMatchData } from '../DB/crumd.js';
 import { admin, db } from '../DB/firestore.js';
 import { comparePassword, hashPassword, sendOtpToEmail, verifyOtp } from '../helper/authHelper.js';
 import JWT from 'jsonwebtoken';
@@ -70,6 +70,7 @@ import { uploadFile } from '../helper/mediaHelper.js';
 export const registerController = async (req, res) => {
   try {
     const { fname, lname, email, password, phone, dob, address } = req.body;
+    console.log(req.file)
     const userId = uuidv4();
     var now = new Date();
     var time = now.toISOString();
@@ -100,7 +101,14 @@ export const registerController = async (req, res) => {
       .collection(process.env.userCollection)
       .where('email', '==', email)
       .get();
+
+    let userData
     if (!querySnapshot.empty) {
+      querySnapshot.docs[0].data()
+      console.log(userData);
+    }
+
+    if (userData && userData.verified) {
       return res.status(200).send({
         success: false,
         message: 'User already registered. Please login.',
@@ -134,14 +142,15 @@ export const registerController = async (req, res) => {
       phone: phone,
       address: address || null, // Address is optional
       study: [],
-      blocked: false,
+      verified: false,
+      allowed: false,
       role: 0,
-      alert: admin.firestore.FieldValue.arrayUnion({
-        type: 1,
-        heading: 'Request for Registration',
-        text: `Your request for registration has been sent successfully`,
-        time: time,
-      }),
+      // alert: admin.firestore.FieldValue.arrayUnion({
+      //   type: 1,
+      //   heading: 'Request for Registration',
+      //   text: `Your request for registration has been sent successfully`,
+      //   time: time,
+      // }),
     };
 
     // Generate JWT token
@@ -272,10 +281,10 @@ export const loginController = async (req, res) => {
 
     // Compare user password with hashed password
     const isPasswordMatch = await comparePassword(password, userData.password);
-    if (!isPasswordMatch) {
+    if (!isPasswordMatch || !userData.allowed) {
       return res.status(401).send({
         success: false,
-        message: 'Invalid password',
+        message: 'Invalid password or not allowed',
       });
     }
 
@@ -286,8 +295,6 @@ export const loginController = async (req, res) => {
       email: userData.email,
       phone: userData.phone,
       address: userData.address,
-      study: userData.study,
-      blocked: userData.blocked,
       role: userData.role
     }
 
@@ -456,6 +463,21 @@ export const verifyMail = async (req, res) => {
     const isOtpValid = await verifyOtp(email, otp);
 
     if (isOtpValid) {
+      await updateMatchData(process.env.userCollection, "email", email, { verified: true })
+      const userDataSnapshot = await matchData(process.env.userCollection, "email", email)
+      const userData = userDataSnapshot.docs[0].data()
+      const notification_id = Date.now()
+      const notificationData = {
+        userId: userData.userId,
+        notification_id,
+        date: new Date(),
+        allowed: false,
+        photoUrl: userData.photoUrl,
+        fname: userData.fname,
+        lname: userData.lname,
+        type: "registration"
+      }
+      await createSubData(process.env.adminCollection, process.env.notificationCollection, "admin_profile", notification_id, notificationData)
       return res.status(200).send({
         success: true,
         message: 'OTP verified successfully',
