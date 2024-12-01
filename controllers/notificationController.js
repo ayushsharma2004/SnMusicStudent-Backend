@@ -8,7 +8,7 @@ import slugify from "slugify";
 import { v4 as uuidv4 } from 'uuid';
 import { uploadVideo } from "../DB/storage.js";
 import cache from "memory-cache"
-import { createData, deleteData, matchData, matchTwoData, readAllData, readAllLimitData, readFieldData, readSingleData, searchByIdentity, searchByKeyword, searchByTag, updateData } from "../DB/crumd.js";
+import { createData, deleteData, matchData, matchTwoData, readAllData, readAllLimitData, readAllSubData, readFieldData, readSingleData, readSingleSubData, searchByIdentity, searchByKeyword, searchByTag, updateData } from "../DB/crumd.js";
 import { storage } from "../DB/firebase.js";
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { addTextWatermarkToImage, addTextWatermarkToVideo, extractFrameFromVideo, uploadFile, uploadWaterMarkFile } from "../helper/mediaHelper.js";
@@ -98,14 +98,14 @@ const bucket = admin.storage().bucket()
 export const createNotification = async (req, res) => {
     try {
         const { message, userId, studyId } = req.body;
-        const notificationId = uuidv4();
-
         // Initialize batch
         const batch = db.batch();
 
         var now = new Date();
 
         var time = now.toISOString()
+        const notificationId = time;
+
 
         if (!message || !userId || !studyId) {
             return res.status(400).send({ message: 'Message, user info and study material info are required' });
@@ -147,7 +147,7 @@ export const createNotification = async (req, res) => {
         }
 
         var studyJson = studyDoc.data();
-        var notificationJson
+        var notificationJson;
 
         if (studyJson?.public === true) {
             // Calculate the date 100 days from now
@@ -160,6 +160,7 @@ export const createNotification = async (req, res) => {
                 studyTitle: studyJson.title,
                 studyDescription: studyJson.description,
                 studyImage: studyJson.imageUrl,
+                studyLink: studyJson?.link,
                 userId: userJson.userId,
                 userName: userJson.name,
                 userEmail: userJson.email,
@@ -178,6 +179,7 @@ export const createNotification = async (req, res) => {
                     studyTitle: studyJson.title,
                     studyDescription: studyJson.description,
                     studyImage: studyJson.imageUrl,
+                    studyLink: studyJson?.link,
                     approved: true,
                     time: time,
                     startDate: time,
@@ -198,6 +200,7 @@ export const createNotification = async (req, res) => {
                 studyTitle: studyJson.title,
                 studyDescription: studyJson.description,
                 studyImage: studyJson.imageUrl,
+                studyLink: studyJson?.link,
                 userId: userJson.userId,
                 userName: userJson.name,
                 userEmail: userJson.email,
@@ -206,7 +209,8 @@ export const createNotification = async (req, res) => {
                 date: time,
             };
 
-            const notificationRef = db.collection(process.env.notificationCollection).doc(notificationId);
+            const adminRef = db.collection(process.env.adminCollection).doc(process.env.adminId);
+            const notificationRef = adminRef.collection(process.env.notificationCollection).doc(notificationId);
 
 
             // Update user document's events field
@@ -217,6 +221,7 @@ export const createNotification = async (req, res) => {
                     studyTitle: studyJson.title,
                     studyDescription: studyJson.description,
                     studyImage: studyJson.imageUrl,
+                    studyLink: studyJson?.link,
                     approved: false,
                     time: time,
                     startDate: '',
@@ -322,7 +327,7 @@ export const createNotification = async (req, res) => {
 export const readAllNotification = async (req, res) => {
     try {
         // var notification = await readAllData(process.env.notificationCollection);
-        var notification = await readAllData(process.env.notificationCollection);
+        var notification = await readAllSubData(process.env.adminCollection, process.env.notificationCollection, process.env.adminId);
 
         return res.status(201).send({
             success: true,
@@ -390,7 +395,7 @@ export const readSingleNotification = async (req, res) => {
             return res.status(400).send({ message: 'Error finding notification' });
         }
 
-        var notificationData = await readSingleData(process.env.notificationCollection, notificationId);
+        var notificationData = await readSingleSubData(process.env.adminCollection, process.env.adminId, process.env.notificationCollection, notificationId);
         console.log('success');
 
         return res.status(201).send({
@@ -469,7 +474,9 @@ export const updateNotification = async (req, res) => {
         // Initialize batch
         const batch = db.batch();
 
-        const notificationRef = db.collection(process.env.notificationCollection).doc(notificationId);
+        const adminRef = db.collection(process.env.adminCollection).doc(process.env.adminId);
+
+        const notificationRef = adminRef.collection(process.env.notificationCollection).doc(notificationId);
 
         const notificationDoc = await notificationRef.get();
 

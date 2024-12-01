@@ -7,6 +7,8 @@ import authRoutes from './routes/authRoute.js';
 // import accessRoutes from './routes/accessRoute.js';
 import studyRoutes from './routes/studyRoute.js';
 import userRoutes from './routes/userRoute.js';
+import categoryRoutes from './routes/categoryRoute.js';
+import tagRoutes from './routes/tagRoute.js';
 import notificationRoutes from './routes/notificationRoute.js';
 import cookieParser from 'cookie-parser';
 
@@ -55,6 +57,8 @@ app.use('/api/v1/auth', authRoutes);
 // app.use('/api/v1/access', accessRoutes);
 app.use('/api/v1/study', studyRoutes);
 app.use('/api/v1/user', userRoutes);
+app.use('/api/v1/category', categoryRoutes);
+app.use('/api/v1/tag', tagRoutes);
 app.use('/api/v1/notification', notificationRoutes);
 
 //rest api
