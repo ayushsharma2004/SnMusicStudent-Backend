@@ -5,7 +5,16 @@ import { comparePassword, hashPassword, sendOtpToEmail, verifyOtp } from '../hel
 import JWT from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { response } from 'express';
+import nodemailer from 'nodemailer';
 import { uploadFile } from '../helper/mediaHelper.js';
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail', // Use 'gmail' or other service provider
+  auth: {
+    user: process.env.nodemailer_email, // Your email address
+    pass: process.env.nodemailer_pass, // Your email password or app password
+  },
+});
 
 
 /* 
@@ -275,16 +284,22 @@ export const loginController = async (req, res) => {
     if (!userData) {
       return res.status(404).send({
         success: false,
-        message: 'User is not registered',
+        message: 'Email not found. Please check or sign up.',
       });
     }
 
     // Compare user password with hashed password
     const isPasswordMatch = await comparePassword(password, userData.password);
-    if (!isPasswordMatch || !userData.allowed) {
+    if (!userData.allowed) {
       return res.status(401).send({
         success: false,
-        message: 'Invalid password or not allowed',
+        message: 'Admin approval pending.',
+      });
+    }
+    if (!isPasswordMatch) {
+      return res.status(401).send({
+        success: false,
+        message: 'Incorrect password',
       });
     }
 
@@ -357,7 +372,7 @@ export const loginController = async (req, res) => {
     console.error('Error in login:', error);
     return res.status(500).send({
       success: false,
-      message: 'Error in login',
+      message: 'Something went wrong',
       error: error.message,
     });
   }
@@ -803,6 +818,40 @@ export const allowUser = async (req, res) => {
     const userId = notificationData.userId
     await updateSubData(process.env.adminCollection, process.env.notificationCollection, "admin_profile", notification_id, { allowed: true })
     await updateData(process.env.userCollection, userId, { allowed: true })
+    const userData = await readSingleData(process.env.userCollection, userId)
+    const mailOptions = {
+      from: process.env.nodemailer_email, // Your email address
+      to: userData.email,
+      subject: 'Access Granted: Welcome to SN Music Student Portal!',
+      text: `Dear User,
+    
+    We are excited to inform you that your request has been approved by the admin. You now have full access to SN Music and its features.
+    
+    If you have any questions or need assistance, please do not hesitate to reach out to our support team.
+    
+    Login here: https://sn-music-student-frontend.vercel.app/ 
+    (or copy and paste the link into your browser).
+    
+    Welcome aboard!
+    
+    Best regards,
+    SN Music
+    `,
+      html: `
+        <p>Dear User,</p>
+        <p>We are excited to inform you that your request has been <strong>approved</strong> by the admin. You now have full access to SN Music and its features.</p>
+        <p>If you have any questions or need assistance, please do not hesitate to reach out to our support team.</p>
+        <p>Login here: <a href="https://sn-music-student-frontend.vercel.app/">Click to login</a></p>
+        <p>Or copy and paste the following link into your browser:</p>
+        <p><a href="https://sn-music-student-frontend.vercel.app/">https://sn-music-student-frontend.vercel.app/</a></p>
+        <p>Welcome aboard!</p>
+        <p>Best regards,</p>
+        <p><strong>SN Music</strong></p>
+      `,
+    };
+
+
+    await transporter.sendMail(mailOptions);
     return res.status(200).send("User is allowed to use the platform")
   } catch (error) {
     console.error(error)
