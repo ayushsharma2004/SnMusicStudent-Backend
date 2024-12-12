@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import { createStudy, deleteStudy, readAllPublicStudy, readAllStudy, readIDsStudy, readKeywordStudy, readPaginateAllStudy, readSingleStudy, readTagsStudy, updateStudy } from '../controllers/studyController.js';
-import { verifyToken } from '../middleware/authMiddleware.js';
+import { verifyToken, verifyTokenAdmin } from '../middleware/authMiddleware.js';
 
 // Configure multer for file uploads
 const upload = multer({
@@ -17,7 +17,7 @@ const router = express.Router();
 
 //routing
 // Upload a new study material (image, video) || POST
-router.post('/create-study', upload, createStudy);
+router.post('/create-study',verifyTokenAdmin, upload, createStudy);
 
 // Retrieve all study materials || GET
 router.get('/read-all-study', verifyToken, readAllStudy);
