@@ -1,4 +1,4 @@
-import { matchData, readAllData, readSingleData, updateData, updateMatchData } from '../DB/crumd.js';
+import { matchData, readAllData, readFieldData, readSingleData, updateData, updateMatchData } from '../DB/crumd.js';
 import { admin, db } from '../DB/firestore.js';
 import slugify from 'slugify';
 
@@ -58,7 +58,7 @@ export const createCategory = async (req, res) => {
 
 export const readAllCategory = async (req, res) => {
     try {
-        var category = await readAllData(process.env.categoryCollection);
+        var category = await readFieldData(process.env.adminCollection, 'category', 'category');
 
         return res.status(201).send({
             success: true,
@@ -66,10 +66,10 @@ export const readAllCategory = async (req, res) => {
             category: category
         });
     } catch (error) {
-        console.error('Error in reading all tag:', error);
+        console.error('Error in reading all category:', error);
         return res.status(500).send({
             success: false,
-            message: 'Error in reading all tag',
+            message: 'Error in reading all category',
             error: error.message,
         });
     }

@@ -184,6 +184,7 @@ export const readSingleData = async (collectionName, id) => {
     return userRef.data();
   } catch (error) {
     console.log(error);
+    throw new Error(error)
   }
 };
 

@@ -8,6 +8,8 @@ import {
   blockUser,
   updateUserController,
   allowUser,
+  registerAdmin,
+  loginAdmin,
 } from '../controllers/authController.js';
 import { isStudent, requireSignIn } from '../middleware/authMiddleware.js';
 import multer, { memoryStorage } from 'multer';
@@ -51,5 +53,8 @@ router.post('/block-user', blockUser);
 
 router.post('/allow-user', allowUser);
 
+router.post("/register-admin", registerAdmin)
+
+router.post("/login-admin", loginAdmin)
 
 export default router;
