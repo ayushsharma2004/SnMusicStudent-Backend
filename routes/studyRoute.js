@@ -17,7 +17,7 @@ const router = express.Router();
 
 //routing
 // Upload a new study material (image, video) || POST
-router.post('/create-study',verifyTokenAdmin, upload, createStudy);
+router.post('/create-study', verifyTokenAdmin, upload, createStudy);
 
 // Retrieve all study materials || GET
 router.get('/read-all-study', verifyToken, readAllStudy);
