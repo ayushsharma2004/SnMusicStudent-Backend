@@ -61,7 +61,7 @@ export const verifyToken = async (req, res, next) => {
     console.log("accesstoken:", accessToken, "\n refreshToken:", refreshToken)
 
     if (!accessToken || !refreshToken) {
-      return res.status(401).send({ success: false, message: "access or refresh token is not present" })
+      return res.status(401).send({ success: false, loginRequired: true, message: "access or refresh token is not present" })
     }
 
     const querySnapshot = await db.collection(process.env.userCollection) // replace with your collection name
@@ -73,6 +73,7 @@ export const verifyToken = async (req, res, next) => {
       console.log("No matching documents.");
       return res.status(401).send({
         success: false,
+        loginRequired: true,
         message: "token has been changed"
       })
     }
@@ -115,7 +116,7 @@ export const verifyToken = async (req, res, next) => {
         }
       }
     } else if (error.name === 'JsonWebTokenError') {
-      return res.status(401).send("Invalid token");
+      return res.status(401).send({ success: false, loginRequired: true, message: "Invalid token" });
     }
     res.status(500).send("Internal error occured")
   }
@@ -129,7 +130,7 @@ export const verifyTokenAdmin = async (req, res, next) => {
     console.log("accesstoken:", accessToken, "\n refreshToken:", refreshToken)
 
     if (!accessToken || !refreshToken) {
-      res.redirect(process.env.loginRedirectAdmin)
+      // res.redirect(process.env.loginRedirectAdmin)
       return res.status(401).send({
         success: false,
         loginRequired: true,
@@ -144,7 +145,7 @@ export const verifyTokenAdmin = async (req, res, next) => {
 
     if (querySnapshot.empty) {
       console.log("No matching documents.");
-      res.redirect(process.env.loginRedirectAdmin)
+      // res.redirect(process.env.loginRedirectAdmin)
       return res.status(401).send({
         success: false,
         loginRequired: true,
@@ -163,7 +164,7 @@ export const verifyTokenAdmin = async (req, res, next) => {
         return next()
       }
     }
-    res.redirect(process.env.loginRedirectAdmin)
+    // res.redirect(process.env.loginRedirectAdmin)
     return res.status(401).send({ success: false, loginRequired: true, message: "Refresh token is changed" })
 
   } catch (error) {
@@ -185,15 +186,15 @@ export const verifyTokenAdmin = async (req, res, next) => {
         }
       } catch (error) {
         if (error.name === 'TokenExpiredError') {
-          res.redirect(process.env.loginRedirectAdmin)
+          // res.redirect(process.env.loginRedirectAdmin)
           res.status(401).send({ success: false, loginRequired: true, message: "Both tokens are expired" })
         }
       }
     } else if (error.name === 'JsonWebTokenError') {
-      res.redirect(process.env.loginRedirectAdmin)
-      return res.status(401).send("Invalid token");
+      // res.redirect(process.env.loginRedirectAdmin)
+      return res.status(401).send({ success: false, loginRequired: true, message: "Invalid Token" });
     }
-    res.redirect(process.env.loginRedirectAdmin)
-    res.status(500).send("Internal error occured")
+    // res.redirect(process.env.loginRedirectAdmin)
+    res.status(500).send({ success: false, loginRequired: true, message: "Something went wrong" })
   }
 }

@@ -1,5 +1,5 @@
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
-import { createData, createSubData, matchData, readSingleData, readSingleSubData, updateData, updateMatchData, updateSubData } from '../DB/crumd.js';
+import { createData, createSubData, deleteData, deleteSubData, matchData, readSingleData, readSingleSubData, updateData, updateMatchData, updateSubData } from '../DB/crumd.js';
 import { admin, db } from '../DB/firestore.js';
 import { comparePassword, hashPassword, sendOtpToEmail, verifyOtp } from '../helper/authHelper.js';
 import JWT from 'jsonwebtoken';
@@ -810,8 +810,9 @@ export const blockUser = async (req, res) => {
 
 export const allowUser = async (req, res) => {
   const { notification_id } = req.body
+
   try {
-    const notificationData = await readSingleSubData(process.env.adminCollection, process.env.notificationCollection, "admin_profile", notification_id)
+    const notificationData = await readSingleSubData(process.env.adminCollection, process.env.notificationCollection, "admin_profile", String(notification_id))
     if (notificationData.allowed) {
       return res.status(400).send("User is already allowed")
     }
@@ -859,6 +860,22 @@ export const allowUser = async (req, res) => {
   }
 }
 
+export const rejectUser = async (req, res) => {
+  try {
+    const { notification_id } = req.body
+    const notificationData = await readSingleSubData(process.env.adminCollection, process.env.notificationCollection, "admin_profile", String(notification_id))
+    const userId = notificationData.userId
+    await deleteSubData(process.env.adminCollection, process.env.notificationCollection, "admin_profile", String(notification_id))
+    await deleteData(process.env.userCollection, userId)
+    return res.status(200).send({
+      success: true,
+      message: "Denied user from accessing the platform"
+    })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).send({ success: false, message: "Something went wrong" })
+  }
+}
 export const testController = (req, res) => {
   res.send('Protected Routes');
 };
@@ -879,15 +896,15 @@ export const loginAdmin = async (req, res) => {
   try {
     const { username, password } = req.body
     console.log(username)
-    if(!username || !password){
+    if (!username || !password) {
       return res.status(400).send({
         success: false,
-        message : "Username or password is not"
+        message: "Username or password is not"
       })
     }
     const adminData = await readSingleData(process.env.adminCollection, username)
     console.log(adminData)
-    if(!adminData){
+    if (!adminData) {
       return res.status(404).send({
         success: false,
         message: 'Username is incorrect',
@@ -903,12 +920,12 @@ export const loginAdmin = async (req, res) => {
 
     const admin = {
       username: adminData.username,
-      password : adminData.password
+      password: adminData.password
     }
 
     const accessToken = JWT.sign(
       {
-        admin 
+        admin
       },
       process.env.JWT_token,
       {
