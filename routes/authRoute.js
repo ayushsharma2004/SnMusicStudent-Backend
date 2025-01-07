@@ -8,8 +8,11 @@ import {
   blockUser,
   updateUserController,
   allowUser,
+  registerAdmin,
+  loginAdmin,
+  rejectUser,
 } from '../controllers/authController.js';
-import { isStudent, requireSignIn } from '../middleware/authMiddleware.js';
+import { isStudent, requireSignIn, verifyTokenAdmin } from '../middleware/authMiddleware.js';
 import multer, { memoryStorage } from 'multer';
 // import { create } from '../DB/FCRUD.js';
 
@@ -49,7 +52,12 @@ router.post("/update-user", updateUserController);
 // Block a user || POST
 router.post('/block-user', blockUser);
 
-router.post('/allow-user', allowUser);
+router.post('/allow-user', verifyTokenAdmin, allowUser);
 
+router.post('/reject-user', verifyTokenAdmin, rejectUser);
+
+router.post("/register-admin", registerAdmin)
+
+router.post("/login-admin", loginAdmin)
 
 export default router;

@@ -1,5 +1,5 @@
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
-import { createSubData, matchData, readSingleData, readSingleSubData, updateData, updateMatchData, updateSubData } from '../DB/crumd.js';
+import { createData, createSubData, deleteData, deleteSubData, matchData, readSingleData, readSingleSubData, updateData, updateMatchData, updateSubData } from '../DB/crumd.js';
 import { admin, db } from '../DB/firestore.js';
 import { comparePassword, hashPassword, sendOtpToEmail, verifyOtp } from '../helper/authHelper.js';
 import JWT from 'jsonwebtoken';
@@ -79,7 +79,7 @@ const transporter = nodemailer.createTransport({
 export const registerController = async (req, res) => {
   try {
     const { fname, lname, email, password, phone, dob, address } = req.body;
-    console.log(req.file)
+    // console.log(req.file)
     const userId = uuidv4();
     var now = new Date();
     var time = now.toISOString();
@@ -114,7 +114,7 @@ export const registerController = async (req, res) => {
     let userData
     if (!querySnapshot.empty) {
       querySnapshot.docs[0].data()
-      console.log(userData);
+      // console.log(userData);
     }
 
     if (userData && userData.verified) {
@@ -150,7 +150,7 @@ export const registerController = async (req, res) => {
       password: hashedPassword,
       phone: phone,
       address: address || null, // Address is optional
-      study: [],
+      myVideos: [],
       verified: false,
       allowed: false,
       role: 0,
@@ -332,7 +332,7 @@ export const loginController = async (req, res) => {
         expiresIn: `${process.env.refreshTokenExpiry}d`,
       }
     )
-    console.log(refreshToken)
+    // console.log(refreshToken)
 
     await db.collection(process.env.userCollection).doc(user.userId).update({
       accessToken,
@@ -341,14 +341,14 @@ export const loginController = async (req, res) => {
 
     res.cookie("accessToken", accessToken, {
       maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
-      httpOnly: true,
+      // httpOnly: true,
       // secure: false, // Set to true if using HTTPS
       // sameSite: "None"
     });
 
     res.cookie("refreshToken", refreshToken, {
       maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
-      httpOnly: true,
+      // httpOnly: true,
       // secure: false, // Set to true if using HTTPS
       // sameSite: "None"
     });
@@ -357,17 +357,18 @@ export const loginController = async (req, res) => {
       success: true,
       message: "User login successful",
       user: {
-        name: userData.name,
+        fname: userData?.fname,
+        lname: userData?.lname,
+        userId: userData?.userId,
         email: userData.email,
         phone: userData.phone,
         address: userData.address,
-        study: userData.study,
-        blocked: userData.blocked,
+        myVideos: userData?.myVideos,
         role: userData.role
       }
     }
     );
-    console.log("success")
+    // console.log("success")
   } catch (error) {
     console.error('Error in login:', error);
     return res.status(500).send({
@@ -810,8 +811,9 @@ export const blockUser = async (req, res) => {
 
 export const allowUser = async (req, res) => {
   const { notification_id } = req.body
+
   try {
-    const notificationData = await readSingleSubData(process.env.adminCollection, process.env.notificationCollection, "admin_profile", notification_id)
+    const notificationData = await readSingleSubData(process.env.adminCollection, process.env.notificationCollection, "admin_profile", String(notification_id))
     if (notificationData.allowed) {
       return res.status(400).send("User is already allowed")
     }
@@ -859,6 +861,110 @@ export const allowUser = async (req, res) => {
   }
 }
 
+export const rejectUser = async (req, res) => {
+  try {
+    const { notification_id } = req.body
+    const notificationData = await readSingleSubData(process.env.adminCollection, process.env.notificationCollection, "admin_profile", String(notification_id))
+    const userId = notificationData.userId
+    await deleteSubData(process.env.adminCollection, process.env.notificationCollection, "admin_profile", String(notification_id))
+    await deleteData(process.env.userCollection, userId)
+    return res.status(200).send({
+      success: true,
+      message: "Denied user from accessing the platform"
+    })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).send({ success: false, message: "Something went wrong" })
+  }
+}
 export const testController = (req, res) => {
   res.send('Protected Routes');
 };
+
+export const registerAdmin = async (req, res) => {
+  try {
+    const { username, password } = req.body
+    const hashedPassword = await hashPassword(password);
+    await createData(process.env.adminCollection, username, { username, password: hashedPassword })
+    return res.status(200).send("Admin Registered successfully")
+  } catch (error) {
+    console.error(error)
+    return res.status(500).send("Something went wrong")
+  }
+}
+
+export const loginAdmin = async (req, res) => {
+  try {
+    const { username, password } = req.body
+    console.log(username)
+    if (!username || !password) {
+      return res.status(400).send({
+        success: false,
+        message: "Username or password is not"
+      })
+    }
+    const adminData = await readSingleData(process.env.adminCollection, username)
+    console.log(adminData)
+    if (!adminData) {
+      return res.status(404).send({
+        success: false,
+        message: 'Username is incorrect',
+      })
+    }
+    const isPasswordMatch = await comparePassword(password, adminData?.password);
+    if (!isPasswordMatch) {
+      return res.status(401).send({
+        success: false,
+        message: 'Incorrect password',
+      });
+    }
+
+    const admin = {
+      username: adminData.username,
+      password: adminData.password
+    }
+
+    const accessToken = JWT.sign(
+      {
+        admin
+      },
+      process.env.JWT_token,
+      {
+        expiresIn: `${process.env.accessTokenExpiry}d`,
+      }
+    );
+
+    const refreshToken = JWT.sign(
+      {
+        adminId: adminData.username,
+      },
+      process.env.JWT_token,
+      {
+        expiresIn: `${process.env.refreshTokenExpiry}d`,
+      }
+    )
+    // console.log(refreshToken)
+
+    await db.collection(process.env.adminCollection).doc(adminData.username).update({
+      accessToken,
+      refreshToken
+    })
+
+    res.cookie("accessToken", accessToken, {
+      maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).send({
+      success: true,
+      message: 'Admin Login Successful',
+    })
+
+  } catch (error) {
+    console.error(error)
+    return res.status(500).send("Something went wrong")
+  }
+}

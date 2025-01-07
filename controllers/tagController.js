@@ -43,7 +43,11 @@ export const createTag = async (req, res) => {
         return res.status(201).send({
             success: true,
             message: 'Tag Created Successfully',
-            tag: tagJson
+            tag: {
+                tagId: tagId,
+                name: name,
+                slug: tagId,
+            }
         });
     } catch (error) {
         console.error('Error in tag creation:', error);
