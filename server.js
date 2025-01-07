@@ -14,6 +14,7 @@ import cookieParser from 'cookie-parser';
 
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import multer from 'multer';
 
 //configure env
 dotenv.config();
@@ -22,7 +23,7 @@ dotenv.config();
 const app = express();
 
 //middlewares
-const allowedOrigins = ["http://localhost:5173", "https://sn-music-student-frontend.vercel.app", "https://sn-music-student-frontend-git-e441d8-ayushsharma2004s-projects.vercel.app/"];
+const allowedOrigins = ["http://localhost:5173", "http://localhost:5174", "https://sn-music-student-frontend.vercel.app", "https://sn-music-student-frontend-git-e441d8-ayushsharma2004s-projects.vercel.app/"];
 
 // CORS middleware
 app.use(cors({
@@ -39,7 +40,7 @@ app.use(cors({
 
 
 
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 // app.use(morgan('combined'));
 app.use(cookieParser())

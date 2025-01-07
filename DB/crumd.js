@@ -434,6 +434,70 @@ export const searchByTag = async (collectionName, keyword = '', tags = [], limit
     throw error; // Re-throw the error after logging it
   }
 };
+export const searchWithFilter = async (
+  collectionName,
+  keyword = '',
+  tags = [],
+  categories = [],
+  isPublic = null,
+  limit = 20
+) => {
+  try {
+    const querySnapshot = await db.collection(collectionName).limit(limit).get(); // Fetch documents with a limit
+
+    let results = [];
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+
+      // Initialize match flags
+      let matchesPublic = false; // Default to true for optional filtering
+      let matchesTags = false;
+      let matchesCategory = false;
+      let matchesKeyword = false;
+
+      // Check if the document matches the public flag
+      if (isPublic !== null) {
+        matchesPublic = data?.public === isPublic;
+      }
+
+      // Check if the document matches all specified tags
+      if (tags.length > 0) {
+        matchesTags = data?.tags && tags.some((tag) => data.tags.includes(tag));
+      }
+
+      // Check if the document matches any category
+      if (categories.length > 0) {
+        console.log(categories);
+
+        matchesCategory = data?.categories && categories.some((cat) => data.categories.includes(cat));
+      }
+
+      // Perform keyword filtering in a case-insensitive manner
+      if (keyword.length > 0) {
+        console.log("keyword: ", keyword);
+
+        const lowerCaseKeyword = keyword.toLowerCase();
+        matchesKeyword =
+          (data?.title && data.title.toLowerCase().includes(lowerCaseKeyword)) ||
+          (data?.description && data.description.toLowerCase().includes(lowerCaseKeyword));
+      } else if (isPublic === null && tags.length <= 0 && category.length <= 0) {
+        matchesKeyword = true;
+      }
+      console.log(matchesPublic, matchesTags, matchesCategory, matchesKeyword);
+
+      // Add to results only if any of the conditions are satisfied
+      if (matchesPublic || matchesTags || matchesCategory || matchesKeyword) {
+        results.push(data);
+      }
+    });
+
+    return results;
+  } catch (error) {
+    console.error('Error fetching documents:', error);
+    throw error; // Re-throw the error after logging it
+  }
+};
 
 /* 
 // Summary: Function to search users by identity in the Firestore collection based on a keyword.

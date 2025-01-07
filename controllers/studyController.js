@@ -8,7 +8,7 @@ import slugify from "slugify";
 import { v4 as uuidv4 } from 'uuid';
 import { uploadVideo } from "../DB/storage.js";
 import cache from "memory-cache"
-import { createData, deleteData, matchData, readAllData, readAllLimitData, readAllLimitPaginate, readFieldData, readSingleData, searchByIDs, searchByKeyword, searchByTag, updateData } from "../DB/crumd.js";
+import { createData, deleteData, matchData, readAllData, readAllLimitData, readAllLimitPaginate, readFieldData, readSingleData, searchByIDs, searchByKeyword, searchByTag, searchWithFilter, updateData } from "../DB/crumd.js";
 import { storage } from "../DB/firebase.js";
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { addTextWatermarkToImage, addTextWatermarkToVideo, extractFrameFromVideo, uploadFile, uploadWaterMarkFile } from "../helper/mediaHelper.js";
@@ -93,15 +93,20 @@ const bucket = admin.storage().bucket()
 */
 export const createStudy = async (req, res) => {
   try {
+    console.log(req.body)
     const { title, description, categories, tags, isPublic, link } = req.body;
     const files = req?.files;
     const studyId = uuidv4();
+    console.log(title);
+
 
     var now = new Date();
     var time = now.toISOString();
 
     // Check if title, description, and video/link are present
     if (!title || !description || (!link && (!files || !files.video))) {
+      console.log(title, description, link, files, files?.video);
+
       return res.status(400).send({ message: 'Title, description, and video are required' });
     }
 
@@ -229,7 +234,7 @@ export const readAllStudy = async (req, res) => {
   try {
     var key = 'all_study'
     // var study = await readAllData(process.env.studyCollection);
-    var study = await readAllLimitData(process.env.studyCollection, ['studyId', 'imageUrl', 'description', 'title', 'videoUrl', 'link', 'public', 'timestamp', 'tags']);
+    var study = await readAllLimitData(process.env.studyCollection, ['studyId', 'imageUrl', 'description', 'title', 'videoUrl', 'link', 'public', 'timestamp', 'tags', 'categories']);
 
     console.log("setting data in cache")
     var response = {
@@ -617,6 +622,52 @@ export const readTagsStudy = async (req, res) => {
     }
 
     var studyData = await searchByTag(process.env.studyCollection, keyword, tag);
+    console.log('success');
+
+    return res.status(201).send({
+      success: true,
+      message: 'study read successfully',
+      study: studyData
+    });
+  } catch (error) {
+    console.error('Error in reading study:', error);
+    return res.status(500).send({
+      success: false,
+      message: 'Error in reading study',
+      error: error.message,
+    });
+  }
+};
+
+
+export const readWithFilter = async (req, res) => {
+  try {
+    var { keyword, tags, categories, isPublic } = req.body;
+
+    if (keyword === '' && (tags?.length === 0) && (categories?.length === 0) && isPublic === null) {
+      var key = 'all_study'
+      // var study = await readAllData(process.env.studyCollection);
+      var study = await readAllLimitData(process.env.studyCollection, ['studyId', 'imageUrl', 'description', 'title', 'videoUrl', 'link', 'public', 'timestamp', 'tags', 'categories']);
+
+      console.log("setting data in cache")
+      var response = {
+        success: true,
+        message: 'study read successfully',
+        study: study
+      }
+      cache.put(key, response, CACHE_DURATION)
+
+      return res.status(201).send({
+        success: true,
+        message: 'study read successfully',
+        study: study
+      });
+    }
+    if (!keyword) {
+      keyword = false;
+    }
+
+    var studyData = await searchWithFilter(process.env.studyCollection, keyword, tags, categories, isPublic);
     console.log('success');
 
     return res.status(201).send({
