@@ -150,7 +150,7 @@ export const registerController = async (req, res) => {
       password: hashedPassword,
       phone: phone,
       address: address || null, // Address is optional
-      study: [],
+      myVideos: [],
       verified: false,
       allowed: false,
       role: 0,
@@ -357,12 +357,13 @@ export const loginController = async (req, res) => {
       success: true,
       message: "User login successful",
       user: {
-        name: userData.name,
+        fname: userData?.fname,
+        lname: userData?.lname,
+        userId: userData?.userId,
         email: userData.email,
         phone: userData.phone,
         address: userData.address,
-        study: userData.study,
-        blocked: userData.blocked,
+        myVideos: userData?.myVideos,
         role: userData.role
       }
     }

@@ -21,13 +21,13 @@ const router = express.Router();
 router.post('/create-notification', createNotification);
 
 // Route to read all notifications || GET
-router.get('/read-all-notification', verifyTokenAdmin, readAllNotification);
+router.get('/read-all-notification', readAllNotification);
 
 // Route to read a single notification || POST
 router.post('/read-notification', verifyTokenAdmin, readSingleNotification);
 
 // Route to update a notification || POST
-router.post('/update-notification', verifyTokenAdmin, updateNotification);
+router.post('/update-notification', updateNotification);
 
 
 export default router;

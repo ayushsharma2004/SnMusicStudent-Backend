@@ -365,7 +365,7 @@ export const readUserStudy = async (req, res) => {
       return res.status(400).send({ message: 'Error finding user' });
     }
 
-    var approvedStudies = await searchInnerFieldData(process.env.userCollection, userId, 'study', 'approved', true);
+    var approvedStudies = await searchInnerFieldData(process.env.userCollection, userId, 'myVideos', 'approved', true);
     console.log('success');
 
     return res.status(201).send({
@@ -438,7 +438,7 @@ export const readLimitedUserStudy = async (req, res) => {
       return res.status(400).send({ message: 'Error finding user' });
     }
 
-    var approvedStudies = await searchLimitInnerFieldData(process.env.userCollection, userId, 'study', 'approved', true, limit);
+    var approvedStudies = await searchLimitInnerFieldData(process.env.userCollection, userId, 'myVideos', 'approved', true, limit);
     console.log('success');
 
     return res.status(201).send({
@@ -510,7 +510,7 @@ export const readUserUnapprovedStudy = async (req, res) => {
       return res.status(400).send({ message: 'Error finding user' });
     }
 
-    var approvedStudies = await searchInnerFieldData(process.env.userCollection, userId, 'study', 'approved', false);
+    var approvedStudies = await searchInnerFieldData(process.env.userCollection, userId, 'myVideos', 'approved', false);
     console.log('success');
 
     return res.status(201).send({
@@ -578,7 +578,7 @@ export const readSingleUserStudy = async (req, res) => {
       return res.status(400).send({ message: 'Error finding user' });
     }
 
-    var approvedStudies = await searchInnerFieldData(process.env.userCollection, userId, 'study', 'studyId', studyId);
+    var approvedStudies = await searchInnerFieldData(process.env.userCollection, userId, 'myVideos', 'videoId', studyId);
     console.log('success');
 
     return res.status(201).send({
