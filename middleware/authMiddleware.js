@@ -101,12 +101,12 @@ export const verifyToken = async (req, res, next) => {
           const { newAccessToken, newRefreshToken } = await renewToken(refreshToken)
           res.cookie("accessToken", newAccessToken, {
             maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
-
+            sameSite: "None",
           });
 
           res.cookie("refreshToken", newRefreshToken, {
             maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
-
+            sameSite: "None",
           });
           next()
         }
@@ -177,10 +177,12 @@ export const verifyTokenAdmin = async (req, res, next) => {
           const { newAccessToken, newRefreshToken } = await renewAdminToken(refreshToken)
           res.cookie("accessToken", newAccessToken, {
             maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
+            sameSite: "None",
           });
 
           res.cookie("refreshToken", newRefreshToken, {
             maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
+            sameSite: "None",
           });
           next()
         }
