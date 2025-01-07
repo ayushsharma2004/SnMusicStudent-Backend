@@ -343,14 +343,14 @@ export const loginController = async (req, res) => {
       maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
       // httpOnly: true,
       // secure: false, // Set to true if using HTTPS
-      // sameSite: "None"
+      sameSite: "None"
     });
 
     res.cookie("refreshToken", refreshToken, {
       maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
       // httpOnly: true,
       // secure: false, // Set to true if using HTTPS
-      // sameSite: "None"
+      sameSite: "None"
     });
 
     res.status(200).send({
@@ -952,10 +952,13 @@ export const loginAdmin = async (req, res) => {
 
     res.cookie("accessToken", accessToken, {
       maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
+      sameSite: "None"
     });
 
     res.cookie("refreshToken", refreshToken, {
       maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
+      sameSite: "None"
+
     });
 
     return res.status(200).send({
