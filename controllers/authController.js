@@ -957,6 +957,7 @@ export const loginAdmin = async (req, res) => {
       sameSite: 'None',
       secure: true,      // Required for cross-origin cookies
       httpOnly: false,   // Allows JavaScript access
+      domain: 'https://sn-music-admin-frontend.vercel.app'
       // path: '/'
     };
 
