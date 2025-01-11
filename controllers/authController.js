@@ -950,16 +950,27 @@ export const loginAdmin = async (req, res) => {
       refreshToken
     })
 
-    res.cookie("accessToken", accessToken, {
-      maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
-      sameSite: "None"
-    });
+    // Set cookies
+    const cookieOptions = {
+      maxAge: Number(process.env.COOKIE_EXPIRY) * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Secure only in production
+      sameSite: "None",
+    };
 
-    res.cookie("refreshToken", refreshToken, {
-      maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
-      sameSite: "None"
+    res.cookie("accessToken", accessToken, cookieOptions);
+    res.cookie("refreshToken", refreshToken, cookieOptions);
 
-    });
+    // res.cookie("accessToken", accessToken, {
+    //   maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
+    //   sameSite: "None"
+    // });
+
+    // res.cookie("refreshToken", refreshToken, {
+    //   maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
+    //   sameSite: "None"
+
+    // });
 
     return res.status(200).send({
       success: true,
