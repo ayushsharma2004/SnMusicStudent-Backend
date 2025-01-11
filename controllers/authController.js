@@ -1,11 +1,20 @@
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
-import { createSubData, matchData, readSingleData, readSingleSubData, updateData, updateMatchData, updateSubData } from '../DB/crumd.js';
+import { createData, createSubData, deleteData, deleteSubData, matchData, readSingleData, readSingleSubData, updateData, updateMatchData, updateSubData } from '../DB/crumd.js';
 import { admin, db } from '../DB/firestore.js';
 import { comparePassword, hashPassword, sendOtpToEmail, verifyOtp } from '../helper/authHelper.js';
 import JWT from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { response } from 'express';
+import nodemailer from 'nodemailer';
 import { uploadFile } from '../helper/mediaHelper.js';
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail', // Use 'gmail' or other service provider
+  auth: {
+    user: process.env.nodemailer_email, // Your email address
+    pass: process.env.nodemailer_pass, // Your email password or app password
+  },
+});
 
 
 /* 
@@ -70,7 +79,7 @@ import { uploadFile } from '../helper/mediaHelper.js';
 export const registerController = async (req, res) => {
   try {
     const { fname, lname, email, password, phone, dob, address } = req.body;
-    console.log(req.file)
+    // console.log(req.file)
     const userId = uuidv4();
     var now = new Date();
     var time = now.toISOString();
@@ -105,7 +114,7 @@ export const registerController = async (req, res) => {
     let userData
     if (!querySnapshot.empty) {
       querySnapshot.docs[0].data()
-      console.log(userData);
+      // console.log(userData);
     }
 
     if (userData && userData.verified) {
@@ -141,7 +150,7 @@ export const registerController = async (req, res) => {
       password: hashedPassword,
       phone: phone,
       address: address || null, // Address is optional
-      study: [],
+      myVideos: [],
       verified: false,
       allowed: false,
       role: 0,
@@ -275,16 +284,22 @@ export const loginController = async (req, res) => {
     if (!userData) {
       return res.status(404).send({
         success: false,
-        message: 'User is not registered',
+        message: 'Email not found. Please check or sign up.',
       });
     }
 
     // Compare user password with hashed password
     const isPasswordMatch = await comparePassword(password, userData.password);
-    if (!isPasswordMatch || !userData.allowed) {
+    if (!userData.allowed) {
       return res.status(401).send({
         success: false,
-        message: 'Invalid password or not allowed',
+        message: 'Admin approval pending.',
+      });
+    }
+    if (!isPasswordMatch) {
+      return res.status(401).send({
+        success: false,
+        message: 'Incorrect password',
       });
     }
 
@@ -317,7 +332,7 @@ export const loginController = async (req, res) => {
         expiresIn: `${process.env.refreshTokenExpiry}d`,
       }
     )
-    console.log(refreshToken)
+    // console.log(refreshToken)
 
     await db.collection(process.env.userCollection).doc(user.userId).update({
       accessToken,
@@ -326,38 +341,39 @@ export const loginController = async (req, res) => {
 
     res.cookie("accessToken", accessToken, {
       maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
-      httpOnly: true,
+      // httpOnly: true,
       // secure: false, // Set to true if using HTTPS
-      // sameSite: "None"
+      sameSite: "None"
     });
 
     res.cookie("refreshToken", refreshToken, {
       maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
-      httpOnly: true,
+      // httpOnly: true,
       // secure: false, // Set to true if using HTTPS
-      // sameSite: "None"
+      sameSite: "None"
     });
 
     res.status(200).send({
       success: true,
       message: "User login successful",
       user: {
-        name: userData.name,
+        fname: userData?.fname,
+        lname: userData?.lname,
+        userId: userData?.userId,
         email: userData.email,
         phone: userData.phone,
         address: userData.address,
-        study: userData.study,
-        blocked: userData.blocked,
+        myVideos: userData?.myVideos,
         role: userData.role
       }
     }
     );
-    console.log("success")
+    // console.log("success")
   } catch (error) {
     console.error('Error in login:', error);
     return res.status(500).send({
       success: false,
-      message: 'Error in login',
+      message: 'Something went wrong',
       error: error.message,
     });
   }
@@ -795,14 +811,49 @@ export const blockUser = async (req, res) => {
 
 export const allowUser = async (req, res) => {
   const { notification_id } = req.body
+
   try {
-    const notificationData = await readSingleSubData(process.env.adminCollection, process.env.notificationCollection, "admin_profile", notification_id)
+    const notificationData = await readSingleSubData(process.env.adminCollection, process.env.notificationCollection, "admin_profile", String(notification_id))
     if (notificationData.allowed) {
       return res.status(400).send("User is already allowed")
     }
     const userId = notificationData.userId
     await updateSubData(process.env.adminCollection, process.env.notificationCollection, "admin_profile", notification_id, { allowed: true })
     await updateData(process.env.userCollection, userId, { allowed: true })
+    const userData = await readSingleData(process.env.userCollection, userId)
+    const mailOptions = {
+      from: process.env.nodemailer_email, // Your email address
+      to: userData.email,
+      subject: 'Access Granted: Welcome to SN Music Student Portal!',
+      text: `Dear User,
+    
+    We are excited to inform you that your request has been approved by the admin. You now have full access to SN Music and its features.
+    
+    If you have any questions or need assistance, please do not hesitate to reach out to our support team.
+    
+    Login here: https://sn-music-student-frontend.vercel.app/ 
+    (or copy and paste the link into your browser).
+    
+    Welcome aboard!
+    
+    Best regards,
+    SN Music
+    `,
+      html: `
+        <p>Dear User,</p>
+        <p>We are excited to inform you that your request has been <strong>approved</strong> by the admin. You now have full access to SN Music and its features.</p>
+        <p>If you have any questions or need assistance, please do not hesitate to reach out to our support team.</p>
+        <p>Login here: <a href="https://sn-music-student-frontend.vercel.app/">Click to login</a></p>
+        <p>Or copy and paste the following link into your browser:</p>
+        <p><a href="https://sn-music-student-frontend.vercel.app/">https://sn-music-student-frontend.vercel.app/</a></p>
+        <p>Welcome aboard!</p>
+        <p>Best regards,</p>
+        <p><strong>SN Music</strong></p>
+      `,
+    };
+
+
+    await transporter.sendMail(mailOptions);
     return res.status(200).send("User is allowed to use the platform")
   } catch (error) {
     console.error(error)
@@ -810,6 +861,124 @@ export const allowUser = async (req, res) => {
   }
 }
 
+export const rejectUser = async (req, res) => {
+  try {
+    const { notification_id } = req.body
+    const notificationData = await readSingleSubData(process.env.adminCollection, process.env.notificationCollection, "admin_profile", String(notification_id))
+    const userId = notificationData.userId
+    await deleteSubData(process.env.adminCollection, process.env.notificationCollection, "admin_profile", String(notification_id))
+    await deleteData(process.env.userCollection, userId)
+    return res.status(200).send({
+      success: true,
+      message: "Denied user from accessing the platform"
+    })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).send({ success: false, message: "Something went wrong" })
+  }
+}
 export const testController = (req, res) => {
   res.send('Protected Routes');
 };
+
+export const registerAdmin = async (req, res) => {
+  try {
+    const { username, password } = req.body
+    const hashedPassword = await hashPassword(password);
+    await createData(process.env.adminCollection, username, { username, password: hashedPassword })
+    return res.status(200).send("Admin Registered successfully")
+  } catch (error) {
+    console.error(error)
+    return res.status(500).send("Something went wrong")
+  }
+}
+
+export const loginAdmin = async (req, res) => {
+  try {
+    const { username, password } = req.body
+    console.log(username)
+    if (!username || !password) {
+      return res.status(400).send({
+        success: false,
+        message: "Username or password is not"
+      })
+    }
+    const adminData = await readSingleData(process.env.adminCollection, username)
+    console.log(adminData)
+    if (!adminData) {
+      return res.status(404).send({
+        success: false,
+        message: 'Username is incorrect',
+      })
+    }
+    const isPasswordMatch = await comparePassword(password, adminData?.password);
+    if (!isPasswordMatch) {
+      return res.status(401).send({
+        success: false,
+        message: 'Incorrect password',
+      });
+    }
+
+    const admin = {
+      username: adminData.username,
+      password: adminData.password
+    }
+
+    const accessToken = JWT.sign(
+      {
+        admin
+      },
+      process.env.JWT_token,
+      {
+        expiresIn: `${process.env.accessTokenExpiry}d`,
+      }
+    );
+
+    const refreshToken = JWT.sign(
+      {
+        adminId: adminData.username,
+      },
+      process.env.JWT_token,
+      {
+        expiresIn: `${process.env.refreshTokenExpiry}d`,
+      }
+    )
+    // console.log(refreshToken)
+
+    await db.collection(process.env.adminCollection).doc(adminData.username).update({
+      accessToken,
+      refreshToken
+    })
+
+    // Set cookies
+    const cookieOptions = {
+      maxAge: Number(process.env.COOKIE_EXPIRY) * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Secure only in production
+      sameSite: "None",
+    };
+
+    res.cookie("accessToken", accessToken, cookieOptions);
+    res.cookie("refreshToken", refreshToken, cookieOptions);
+
+    // res.cookie("accessToken", accessToken, {
+    //   maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
+    //   sameSite: "None"
+    // });
+
+    // res.cookie("refreshToken", refreshToken, {
+    //   maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
+    //   sameSite: "None"
+
+    // });
+
+    return res.status(200).send({
+      success: true,
+      message: 'Admin Login Successful',
+    })
+
+  } catch (error) {
+    console.error(error)
+    return res.status(500).send("Something went wrong")
+  }
+}

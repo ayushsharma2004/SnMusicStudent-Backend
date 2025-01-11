@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
-import { createStudy, deleteStudy, readAllPublicStudy, readAllStudy, readIDsStudy, readKeywordStudy, readPaginateAllStudy, readSingleStudy, readTagsStudy, updateStudy } from '../controllers/studyController.js';
-import { verifyToken } from '../middleware/authMiddleware.js';
+import { createStudy, deleteStudy, readAllPublicStudy, readAllStudy, readIDsStudy, readKeywordStudy, readPaginateAllStudy, readSingleStudy, readTagsStudy, readWithFilter, updateStudy } from '../controllers/studyController.js';
+import { verifyToken, verifyTokenAdmin } from '../middleware/authMiddleware.js';
 
 // Configure multer for file uploads
 const upload = multer({
@@ -17,10 +17,10 @@ const router = express.Router();
 
 //routing
 // Upload a new study material (image, video) || POST
-router.post('/create-study', upload, createStudy);
+router.post('/create-study', verifyTokenAdmin, upload, createStudy);
 
 // Retrieve all study materials || GET
-router.get('/read-all-study', verifyToken, readAllStudy);
+router.get('/read-all-study', readAllStudy);
 
 // Retrieve study materials with pagination || POST
 router.post('/read-paginate-all-study', readPaginateAllStudy);
@@ -33,6 +33,9 @@ router.post('/read-keyword-study', readKeywordStudy);
 
 // Search study materials by tag || POST
 router.post('/read-tag-study', readTagsStudy);
+
+// Search study materials by tag || POST
+router.post('/read-with-filter', readWithFilter);
 
 // Retrieve study materials by a list of IDs || POST
 router.post('/read-ids-study', readIDsStudy);

@@ -8,7 +8,7 @@ import slugify from "slugify";
 import { v4 as uuidv4 } from 'uuid';
 import { uploadVideo } from "../DB/storage.js";
 import cache from "memory-cache"
-import { createData, deleteData, matchData, matchTwoData, readAllData, readAllLimitData, readFieldData, readSingleData, searchByIdentity, searchByKeyword, searchByTag, updateData } from "../DB/crumd.js";
+import { createData, deleteData, matchData, matchTwoData, readAllData, readAllLimitData, readAllSubData, readFieldData, readSingleData, readSingleSubData, searchByIdentity, searchByKeyword, searchByTag, updateData } from "../DB/crumd.js";
 import { storage } from "../DB/firebase.js";
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { addTextWatermarkToImage, addTextWatermarkToVideo, extractFrameFromVideo, uploadFile, uploadWaterMarkFile } from "../helper/mediaHelper.js";
@@ -97,8 +97,10 @@ const bucket = admin.storage().bucket()
 
 export const createNotification = async (req, res) => {
     try {
-        const { message, userId, studyId } = req.body;
-        const notificationId = uuidv4();
+        const { userId, studyId, validity } = req.body;
+        const notificationId = Date.now().toString();
+        console.log(notificationId);
+
 
         // Initialize batch
         const batch = db.batch();
@@ -107,11 +109,12 @@ export const createNotification = async (req, res) => {
 
         var time = now.toISOString()
 
-        if (!message || !userId || !studyId) {
+
+        if (!userId || !studyId) {
             return res.status(400).send({ message: 'Message, user info and study material info are required' });
         }
 
-        const validateData = await matchTwoData(process.env.notificationCollection, 'userId', userId, 'studyId', studyId);
+        const validateData = await matchTwoData(process.env.notificationCollection, 'userId', userId, 'videoId', studyId);
         if (!validateData?.empty) {
             return res.status(400).send({ message: 'Request already exists' });
         }
@@ -141,46 +144,66 @@ export const createNotification = async (req, res) => {
         var userJson = userDoc?.data();
 
         // Request Validation if the user already has the access of the video
-        const validateStudies = userJson?.study?.filter(study => study?.studyId === studyId);
+        const validateStudies = userJson?.myVideos?.filter(video => video?.videoId === studyId);
         if (validateStudies.length >= 1) {
             return res.status(400).send({ message: 'User already has access to the study' });
         }
 
         var studyJson = studyDoc.data();
-        var notificationJson
+        var notificationJson;
+
 
         if (studyJson?.public === true) {
             // Calculate the date 100 days from now
-            now.setMonth(now.getMonth() + 3);
-            const expiryDate = now.toISOString();
+            if (validity) {
+                now.setMonth(now.getMonth() + validity);
+            } else {
+                now.setMonth(now.getMonth() + 3);
+            }
+
+            now.setMonth(now.getMonth() + 1000);
+
+            const expiryDate = now?.toISOString();
 
             notificationJson = {
                 message: 'Access granted',
-                studyId: studyJson.studyId,
-                studyTitle: studyJson.title,
-                studyDescription: studyJson.description,
-                studyImage: studyJson.imageUrl,
+                notificationId: notificationId,
+                videoId: studyJson.studyId,
+                videoTitle: studyJson.title,
+                videoDescription: studyJson.description,
+                videoUrl: studyJson?.videoUrl,
+                videoImage: studyJson.imageUrl,
+                videoLink: studyJson?.link,
+                public: studyJson?.public,
                 userId: userJson.userId,
-                userName: userJson.name,
+                userFname: userJson.fname,
+                userLname: userJson.lname,
                 userEmail: userJson.email,
-                userBlocked: userJson.blocked,
+                userAllowed: userJson.allowed,
+                userVerified: userJson.verified,
                 date: time,
                 approved: true,
                 time: time,
                 startDate: time,
-                expiryDate: expiryDate
+                expiryDate: expiryDate,
+                validity: 1000,
+                type: "videos"
             };
 
             batch.update(userRef, {
-                study: admin.firestore.FieldValue.arrayUnion({
+                myVideos: admin.firestore.FieldValue.arrayUnion({
                     userId: userJson.userId,
-                    studyId: studyJson.studyId,
-                    studyTitle: studyJson.title,
-                    studyDescription: studyJson.description,
-                    studyImage: studyJson.imageUrl,
+                    videoId: studyJson.studyId,
+                    videoTitle: studyJson.title,
+                    videoDescription: studyJson.description,
+                    videoUrl: studyJson?.videoUrl,
+                    videoImage: studyJson.imageUrl,
+                    videoLink: studyJson?.link,
+                    public: studyJson?.public,
                     approved: true,
                     time: time,
                     startDate: time,
+                    validity: 1000,
                     expiryDate: expiryDate
                 }),
                 alert: admin.firestore.FieldValue.arrayUnion({
@@ -192,31 +215,43 @@ export const createNotification = async (req, res) => {
             });
         } else if (studyJson?.public === false) {
             notificationJson = {
+                message: 'Access requested',
                 notificationId: notificationId,
-                message: message,
-                studyId: studyJson.studyId,
-                studyTitle: studyJson.title,
-                studyDescription: studyJson.description,
-                studyImage: studyJson.imageUrl,
+                videoId: studyJson.studyId,
+                videoTitle: studyJson.title,
+                videoDescription: studyJson.description,
+                videoUrl: studyJson?.videoUrl,
+                videoImage: studyJson.imageUrl,
+                videoLink: studyJson?.link,
+                public: studyJson?.public,
                 userId: userJson.userId,
-                userName: userJson.name,
+                userFname: userJson.fname,
+                userLname: userJson.lname,
                 userEmail: userJson.email,
-                userBlocked: userJson.blocked,
+                userAllowed: userJson.allowed,
+                userVerified: userJson.verified,
+                validity: validity,
                 approved: false,
                 date: time,
+                type: "videos"
             };
 
-            const notificationRef = db.collection(process.env.notificationCollection).doc(notificationId);
+            const adminRef = db.collection(process.env.adminCollection).doc(process.env.adminId);
+            const notificationRef = adminRef.collection(process.env.notificationCollection).doc(notificationId);
 
 
             // Update user document's events field
             batch.update(userRef, {
-                study: admin.firestore.FieldValue.arrayUnion({
+                myVideos: admin.firestore.FieldValue.arrayUnion({
                     userId: userJson.userId,
-                    studyId: studyJson.studyId,
-                    studyTitle: studyJson.title,
-                    studyDescription: studyJson.description,
-                    studyImage: studyJson.imageUrl,
+                    videoId: studyJson.studyId,
+                    videoTitle: studyJson.title,
+                    videoDescription: studyJson.description,
+                    videoUrl: studyJson?.videoUrl,
+                    videoImage: studyJson.imageUrl,
+                    videoLink: studyJson?.link,
+                    public: studyJson?.public,
+                    validity: validity,
                     approved: false,
                     time: time,
                     startDate: '',
@@ -322,7 +357,7 @@ export const createNotification = async (req, res) => {
 export const readAllNotification = async (req, res) => {
     try {
         // var notification = await readAllData(process.env.notificationCollection);
-        var notification = await readAllData(process.env.notificationCollection);
+        var notification = await readAllSubData(process.env.adminCollection, process.env.notificationCollection, process.env.adminId);
 
         return res.status(201).send({
             success: true,
@@ -390,7 +425,7 @@ export const readSingleNotification = async (req, res) => {
             return res.status(400).send({ message: 'Error finding notification' });
         }
 
-        var notificationData = await readSingleData(process.env.notificationCollection, notificationId);
+        var notificationData = await readSingleSubData(process.env.adminCollection, process.env.adminId, process.env.notificationCollection, notificationId);
         console.log('success');
 
         return res.status(201).send({
@@ -469,7 +504,9 @@ export const updateNotification = async (req, res) => {
         // Initialize batch
         const batch = db.batch();
 
-        const notificationRef = db.collection(process.env.notificationCollection).doc(notificationId);
+        const adminRef = db.collection(process.env.adminCollection).doc(process.env.adminId);
+
+        const notificationRef = adminRef.collection(process.env.notificationCollection).doc(notificationId);
 
         const notificationDoc = await notificationRef.get();
 
@@ -484,18 +521,22 @@ export const updateNotification = async (req, res) => {
 
         const userRef = db.collection(process.env.userCollection).doc(notificationJson?.userId);
 
-        var userData = (await userRef.get()).get("study");
+        var userData = (await userRef.get()).get("myVideos");
 
-        var fieldData = userData.find(item => item.studyId === notificationJson.studyId)
+        var fieldData = userData.find(item => item.videoId === notificationJson?.videoId)
 
         var updatedData;
         var now = new Date();
 
         // Set the startDate to the current date
         const startDate = now.toISOString(); // Converts to ISO string format
-
-        // Calculate the date 100 days from now
-        now.setMonth(now.getMonth() + 3);
+        if (notificationJson?.validity) {
+            // Calculate the date 100 days from now
+            now.setMonth(now.getMonth() + notificationJson?.validity);
+        } else {
+            // Calculate the date 100 days from now
+            now.setMonth(now.getMonth() + 3);
+        }
         const expiryDate = now.toISOString();
         if (approved) {
             type = 2;
@@ -514,11 +555,11 @@ export const updateNotification = async (req, res) => {
             console.log(updatedData);
             // Update user document's events field
             batch.update(userRef, {
-                study: updatedData,
+                myVideos: updatedData,
                 alert: admin.firestore.FieldValue.arrayUnion({
                     type: type,
                     heading: "Access Accepted",
-                    text: `You have been given access for ${notificationJson.studyTitle}`,
+                    text: `You have been given access for ${notificationJson.videoTitle}`,
                     time: startDate
                 })
             });
@@ -526,14 +567,14 @@ export const updateNotification = async (req, res) => {
             type = 0;
 
             // Filter out the object with the matching studyId
-            updatedData = userData.filter(item => item.studyId !== notificationJson.studyId);
+            updatedData = userData.filter(item => item.videoId !== notificationJson.videoId);
 
             batch.update(userRef, {
-                study: updatedData,
+                myVideos: updatedData,
                 alert: admin.firestore.FieldValue.arrayUnion({
                     type: type,
                     heading: "Access Denied",
-                    text: `Your request has been denied for ${notificationJson.studyTitle}`,
+                    text: `Your request has been denied for ${notificationJson.videoTitle}`,
                     time: startDate
                 })
             })

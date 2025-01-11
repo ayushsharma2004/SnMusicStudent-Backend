@@ -7,11 +7,14 @@ import authRoutes from './routes/authRoute.js';
 // import accessRoutes from './routes/accessRoute.js';
 import studyRoutes from './routes/studyRoute.js';
 import userRoutes from './routes/userRoute.js';
+import categoryRoutes from './routes/categoryRoute.js';
+import tagRoutes from './routes/tagRoute.js';
 import notificationRoutes from './routes/notificationRoute.js';
 import cookieParser from 'cookie-parser';
 
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import multer from 'multer';
 
 //configure env
 dotenv.config();
@@ -20,7 +23,7 @@ dotenv.config();
 const app = express();
 
 //middlewares
-const allowedOrigins = ["http://localhost:5173", "https://sn-music-student-frontend.vercel.app"];
+const allowedOrigins = ["http://localhost:5173", "http://localhost:5174", "https://sn-music-student-frontend.vercel.app", "https://sn-music-student-frontend-git-e441d8-ayushsharma2004s-projects.vercel.app/", "https://sn-music-admin-frontend.vercel.app"];
 
 // CORS middleware
 app.use(cors({
@@ -36,7 +39,8 @@ app.use(cors({
 
 
 
-app.use(bodyParser.urlencoded({ extended: false }));
+
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 // app.use(morgan('combined'));
 app.use(cookieParser())
@@ -55,6 +59,8 @@ app.use('/api/v1/auth', authRoutes);
 // app.use('/api/v1/access', accessRoutes);
 app.use('/api/v1/study', studyRoutes);
 app.use('/api/v1/user', userRoutes);
+app.use('/api/v1/category', categoryRoutes);
+app.use('/api/v1/tag', tagRoutes);
 app.use('/api/v1/notification', notificationRoutes);
 
 //rest api

@@ -149,7 +149,52 @@ export const renewToken = async (refreshToken) => {
       refreshToken: newRefreshToken
     })
 
-    return (newAccessToken, newRefreshToken)
+    return { newAccessToken, newRefreshToken }
+
+  } catch (error) {
+    console.error(error)
+    throw new Error("error occured at renew token")
+  }
+}
+
+export const renewAdminToken = async (refreshToken) => {
+  try {
+    const adminId = JWT.verify(refreshToken, process.env.JWT_token).adminId
+    const docRef = db.collection(process.env.adminCollection).doc(adminId)
+    const doc = await docRef.get()
+    const adminData = doc.data()
+
+    const admin = {
+      username: adminData.username,
+      password : adminData.password
+    }
+
+    const newAccessToken = JWT.sign(
+      {
+        admin
+      },
+      process.env.JWT_token,
+      {
+        expiresIn: `${process.env.accessTokenExpiry}d`,
+      }
+    );
+
+    const newRefreshToken = JWT.sign(
+      {
+        adminId: adminData.username,
+      },
+      process.env.JWT_token,
+      {
+        expiresIn: `${process.env.refreshTokenExpiry}d`,
+      }
+    )
+
+    await docRef.update({
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken
+    })
+
+    return { newAccessToken, newRefreshToken }
 
   } catch (error) {
     console.error(error)

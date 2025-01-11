@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import { createNotification, readAllNotification, readSingleNotification, updateNotification } from '../controllers/notificationController.js';
+import { verifyTokenAdmin } from '../middleware/authMiddleware.js';
 
 // Configure multer for file uploads
 const upload = multer({
@@ -23,7 +24,7 @@ router.post('/create-notification', createNotification);
 router.get('/read-all-notification', readAllNotification);
 
 // Route to read a single notification || POST
-router.post('/read-notification', readSingleNotification);
+router.post('/read-notification', verifyTokenAdmin, readSingleNotification);
 
 // Route to update a notification || POST
 router.post('/update-notification', updateNotification);
