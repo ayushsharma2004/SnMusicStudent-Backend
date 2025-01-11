@@ -23,22 +23,24 @@ dotenv.config();
 const app = express();
 
 //middlewares
-const allowedOrigins = ["http://localhost:5173", "http://localhost:5174", "https://sn-music-student-frontend.vercel.app", "https://sn-music-student-frontend-git-e441d8-ayushsharma2004s-projects.vercel.app/", "https://sn-music-admin-frontend.vercel.app"];
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "https://sn-music-student-frontend.vercel.app",
+  "https://sn-music-student-frontend-git-e441d8-ayushsharma2004s-projects.vercel.app", // removed trailing slash
+  "https://sn-music-admin-frontend.vercel.app"
+];
 
-// CORS middleware
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true); // Allow request if origin is in the list or null (non-browser request)
+      callback(null, true);
     } else {
-      callback(new Error("Not allowed by CORS")); // Block request otherwise
+      callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true, // Allow credentials like cookies
+  credentials: true
 }));
-
-
-
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());

@@ -953,7 +953,10 @@ export const loginAdmin = async (req, res) => {
     // Set cookies
     const cookieOptions = {
       maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
-      // sameSite: "None",
+      sameSite: 'None',
+      secure: true,      // Required for cross-origin cookies
+      httpOnly: false,   // Allows JavaScript access
+      path: '/'
     };
 
     res.cookie("accessToken", accessToken, cookieOptions);
