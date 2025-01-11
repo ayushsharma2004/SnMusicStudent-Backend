@@ -952,7 +952,7 @@ export const loginAdmin = async (req, res) => {
 
     // Set cookies
     const cookieOptions = {
-      maxAge: Number(process.env.COOKIE_EXPIRY) * 24 * 60 * 60 * 1000,
+      maxAge: Number(process.env.cookieExpiry) * 24 * 60 * 60 * 1000,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // Secure only in production
       sameSite: "None",
